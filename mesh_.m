@@ -27,7 +27,7 @@ classdef mesh_ < handle
                 x = this.vertices(this.indices(i,:),1);
                 y = this.vertices(this.indices(i,:),2);
                 z = this.vertices(this.indices(i,:),3);
-                c = [this.materials(i);this.materials(i);this.materials(i)];
+                c = 1-[this.materials(i);this.materials(i);this.materials(i)];
                 fill3(x,y,z,c)
 %                 mean_x = mean(x);
 %                 mean_y = mean(y);

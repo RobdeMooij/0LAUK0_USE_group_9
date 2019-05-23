@@ -5,15 +5,15 @@ classdef debris_ < handle
         velocity
         energy
         mass
-        size
+        diameter
         density
         smallest_value
     end
     methods(Access = public,Static)
-        function obj = debris_(position,size,density)
-            obj.velocity = 7700;%+200*rand();
+        function obj = debris_(position,diameter,density)
+            obj.velocity = 70;%700;%+200*rand();
             obj.position = position;
-            obj.mass = 4/3*pi*size^3*density;
+            obj.mass = 4/3*pi*(diameter/2)^3*density;
             angle_z = asin(-position(3)/sqrt(position(1)^2+position(2)^2+position(3)^2))+rand()/3;
             angle_xy = atan2(-position(2),-position(1))+rand()/3;
             obj.direction = [cos(angle_z)*cos(angle_xy);cos(angle_z)*sin(angle_xy);sin(angle_z)];            
@@ -24,21 +24,21 @@ classdef debris_ < handle
     methods(Access = public)
         function [hit,dist] = hit_triangle(this,triangle)
             cross_ve = this.quick_cross(this.direction,triangle.edge_2);
-            dot_ec = this.quick_dot(triangle.edge_1,cross_ve);            
+            dot_ec = this.quick_dot(triangle.edge_1,cross_ve);
             if dot_ec < this.smallest_value && dot_ec > -this.smallest_value
                 hit = 0;
                 dist = inf;
                 return
             end
             vec_plane_to_tri = this.position-triangle.point_1;
-            barycentric_1 = this.quick_dot(vec_plane_to_tri,cross_ve)/dot_ec;            
+            barycentric_1 = this.quick_dot(vec_plane_to_tri,cross_ve)/dot_ec;
             if barycentric_1 < 0 || barycentric_1 > 1
                 hit = 0;
                 dist = inf;
                 return
             end
             cross_vec_edge = this.quick_cross(vec_plane_to_tri,triangle.edge_1);
-            barycentric_2 = this.quick_dot(this.direction,cross_vec_edge)/dot_ec;            
+            barycentric_2 = this.quick_dot(this.direction,cross_vec_edge)/dot_ec;
             if barycentric_2 < 0 || barycentric_1+barycentric_2 > 1
                 hit = 0;
                 dist = inf;

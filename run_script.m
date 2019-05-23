@@ -5,13 +5,13 @@ iss = mesh_("C:\Users\s167917\Documents\#School\Jaar 3\4 Project USE Robots Ever
 iss.show()
 
 hold on
-colors = ['g','c','r'];
-for i = 1:20
+colors = {[0 1 0],[1 0.75 0],[1 0 0]};
+for i = 1:3000
     angle_z  = rand()*2*pi;
     angle_xy = rand()*2*pi;
     dist = 70;%+rand()*1000;
     position = [dist*cos(angle_xy)*cos(angle_z) dist*sin(angle_xy)*cos(angle_z) dist*sin(angle_z)];
-    debris = debris_(position,0.01,1);       
+    debris = debris_(position,0.01,1);
     least_dist = inf;
     first_hit = 0;
     for tri = iss.triangles
@@ -24,9 +24,9 @@ for i = 1:20
             end
         end
     end
-    line([position(1) position(1)+debris.velocity*debris.direction(1)],[position(2) position(2)+debris.velocity*debris.direction(2)],[position(3) position(3)+debris.velocity*debris.direction(3)],'Color',colors(first_hit+1),'LineWidth',1)
+    line([position(1) position(1)+debris.velocity*debris.direction(1)],[position(2) position(2)+debris.velocity*debris.direction(2)],[position(3) position(3)+debris.velocity*debris.direction(3)],'Color',colors{first_hit+1},'LineWidth',1)
     if first_hit > 0
-        plot3(position(1)+debris.velocity*debris.direction(1),position(2)+debris.velocity*debris.direction(2),position(3)+debris.velocity*debris.direction(3),'O','Color',colors(first_hit+1),'MarkerSize',5,'MarkerFaceColor',colors(first_hit+1)) 
+        plot3(position(1)+debris.velocity*debris.direction(1),position(2)+debris.velocity*debris.direction(2),position(3)+debris.velocity*debris.direction(3),'O','Color',colors{first_hit+1},'MarkerSize',8,'MarkerFaceColor',colors{first_hit+1}) 
     end
 end
 set(gcf,'color','w');
