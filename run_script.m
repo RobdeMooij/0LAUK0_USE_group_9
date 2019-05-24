@@ -26,7 +26,7 @@ for i = 1:30
     
     %loop over all triangles to change hit and distance to the earliest intersection
     for triangle = iss.triangles
-        [hit,dist] = debris.hit_triangle(triangle);
+        [hit,dist] = ray_hit_triangle(debris,triangle);
         if hit ~= 0
             if dist < least_dist 
                 first_hit = hit;

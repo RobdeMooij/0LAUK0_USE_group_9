@@ -28,58 +28,6 @@ classdef debris_ < handle
             obj.direction = [cos(elevation)*cos(azimuth);cos(elevation)*sin(azimuth);sin(elevation)];
             obj.energy = obj.mass*obj.velocity^2/2;
         end
-    end
-    methods(Access = public)
-        function [hit,dist] = hit_triangle(this,triangle)
-            %use of the Möller–Trumbore intersection algorithm
-            %inputs:
-            % position      begin position of ray
-            % direction     normalized direction vector of ray
-            % triangle      triangle to check intersection with
-            %outputs:
-            % hit           hit material index(0 = miss)
-            % dist          distance from position to the intersection
-            smallest_value = 1e-7;
-            cross_ve = this.quick_cross(this.direction,triangle.edge_2);
-            dot_ec = this.quick_dot(triangle.edge_1,cross_ve);
-            
-            %ray and triangle are parallel (within smallest allowed value)
-            if dot_ec < smallest_value && dot_ec > -smallest_value
-                hit = 0;
-                dist = inf;
-                return
-            end
-            
-            %intersection outside the triangle
-            vec_plane_to_tri = this.position-triangle.point_1;
-            barycentric_1 = this.quick_dot(vec_plane_to_tri,cross_ve)/dot_ec;
-            if barycentric_1 < 0 || barycentric_1 > 1
-                hit = 0;
-                dist = inf;
-                return
-            end
-            cross_vec_edge = this.quick_cross(vec_plane_to_tri,triangle.edge_1);
-            barycentric_2 = this.quick_dot(this.direction,cross_vec_edge)/dot_ec;
-            if barycentric_2 < 0 || barycentric_1+barycentric_2 > 1
-                hit = 0;
-                dist = inf;
-                return
-            end
-            
-            %ray intersects with triangle
-            hit = triangle.material;
-            dist = this.quick_dot(triangle.edge_2,cross_vec_edge)/dot_ec;
-        end
-    end
-    methods(Access = protected,Static)
-        function scal = quick_dot(a,b)
-            % dot product, without exception handling
-            scal = a(1)*b(1)+a(2)*b(2)+a(3)*b(3);
-        end
-        function vec = quick_cross(a,b)
-            % cross product, without exception handling
-            vec = [a(2)*b(3)-a(3)*b(2);a(3)*b(1)-a(1)*b(3);a(1)*b(2)-a(2)*b(1)];
-        end
-    end
+    end   
 end
 
