@@ -1,4 +1,4 @@
-classdef debris_ < handle
+classdef debris_  < handle
     properties
         position            %vector coordinates of position             [m]
         direction           %normalized vector of movement direction    [m]
@@ -18,16 +18,24 @@ classdef debris_ < handle
             %output:
             % obj           debris object with properties based on inputs
             
-            obj.velocity = 70;%700;%+200*rand();
-            obj.position = position;
-            obj.mass = 4/3*pi*(diameter/2)^3*density;
-            
-            %calculate direction with azimuth, elevation and added noise
-            azimuth = atan2(-position(2),-position(1))+rand()/3;
-            elevation = asin(-position(3)/sqrt(position(1)^2+position(2)^2+position(3)^2))+rand()/3;            
-            obj.direction = [cos(elevation)*cos(azimuth);cos(elevation)*sin(azimuth);sin(elevation)];
-            obj.energy = obj.mass*obj.velocity^2/2;
+            obj.position = position;            
+            obj.energy   = obj.mass*obj.velocity^2/2;
+            obj.mass     = 4/3*pi*(diameter/2)^3*density;
+            obj.diameter = diameter;
+            obj.density  = density;
+            obj.get_movement();
         end
-    end   
+    end
+    methods(Access = protected)
+        function get_movement(this)
+            %calculate direction with azimuth, elevation and added noise
+            azimuth = atan2(-this.position(2),-this.position(1))+rand()/3;
+            elevation = asin(-this.position(3)/sqrt(this.position(1)^2+this.position(2)^2+this.position(3)^2))+rand()/3;            
+            this.direction = [cos(elevation)*cos(azimuth);cos(elevation)*sin(azimuth);sin(elevation)];
+            
+            %give velocity
+            this.velocity = 70;%700;%+200*rand();
+        end
+    end
 end
 
