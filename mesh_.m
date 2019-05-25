@@ -9,9 +9,13 @@ classdef mesh_ < handle
    methods(Access = public, Static)
         function obj = mesh_(file_name)
             %create mesh_ object based on (.json or .txt) file
-			json_file = fopen(file_name); 
-            json_data = jsondecode(fread(json_file,inf,'*char'));
-            fclose(json_file);
+			json_file = fopen(file_name);
+            try %possible bug in jsondecode in Matlab version 2018b and higher
+                json_data = jsondecode(fread(json_file,inf,'*char'));
+            catch %use JSONlab toolbox (has to be installed)
+                json_data = loadjson(file_name);
+            end
+            fclose(json_file);            
             obj.vertices    = json_data.vertices;
             obj.indices     = json_data.triangles;
             obj.materials   = json_data.materials;
