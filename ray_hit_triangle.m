@@ -33,9 +33,18 @@ if barycentric_2 < 0 || barycentric_1+barycentric_2 > 1
     return
 end
 
-%ray intersects with triangle
-hit = triangle.material;
-dist =quick_dot(triangle.edge_2,cross_vec_edge)/dot_ec;
+%caluclate distance to the intersection
+dist = quick_dot(triangle.edge_2,cross_vec_edge)/dot_ec;
+if dist > smallest_value
+    %ray intersects with triangle
+    hit = triangle.material;
+    return
+else
+    %intersects only in opposite direction
+    hit = 0;
+    dist = inf;
+    return
+end
 end
 
 function scal = quick_dot(a,b)
