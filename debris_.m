@@ -20,7 +20,7 @@ classdef debris_  < handle
             %output:
             % obj           debris object with properties based on inputs            
             obj.direction = [sin(azimuth)*cos(elevation) cos(azimuth)*cos(elevation) sin(elevation)];
-            obj.position  = -obj.direction*distance+[rand()-0.5 rand()-0.5 rand()-0.5]*0;%55;
+            obj.position  = -obj.direction*distance+[rand()-0.5 rand()-0.5 rand()-0.5]*55;
             obj.velocity  = 14800*(1-abs(cos(azimuth/2)))+1200*rand();
             obj.diameter  = diameter;
             obj.density   = 2700;
