@@ -18,6 +18,17 @@ classdef triangle_ < handle
             obj.material = material;
 %             obj.normal   = normal;
         end
-    end    
+    end
+    methods(Access = public)
+        function show(this)
+            x = [this.point_1(1) this.point_2(1) this.point_3(1)];
+            y = [this.point_1(2) this.point_2(2) this.point_3(2)];
+            z = [this.point_1(3) this.point_2(3) this.point_3(3)];
+            c = [0.5 0.5 this.material/2];
+            patch(x,y,z,c)
+        end
+    end
 end
+
+
 
