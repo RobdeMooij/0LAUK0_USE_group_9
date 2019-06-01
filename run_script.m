@@ -10,15 +10,16 @@ colors = {[0 1 0],[1 0.75 0],[1 0 0]};
 
 % laser_pos = [0,18,-5];
 % laser = laser_(laser_pos);
-% plot3(laser.position(1),laser.position(2),laser.position(3),'O','Color','w','MarkerSize',10,'MarkerFaceColor','c');
-dist = 100e3;
-for i = 1:100
-    azimuth = rand()*2*pi;
-    elevation  = rand()*2*pi;
-    position = [dist*cos(azimuth)*cos(elevation) dist*sin(azimuth)*cos(elevation) dist*sin(elevation)];
-    debris = debris_(position,0.01,1000);
-    debris.get_path(1)
-    debris.show()
+
+for i = 1:500
+% for azimuth = 0:pi/20:2*pi
+%     for elevation = -pi/2:pi/20:pi/2
+        azimuth = rand()*2*pi;
+        elevation = rand()*pi-pi/2;
+        debris = debris_(azimuth,elevation,100e3,0.01);
+%         debris.get_path(2)
+        debris.show()
+%     end
 end
 
 %loop over number of debris particles
