@@ -26,11 +26,16 @@ classdef mesh_ < handle
                 obj.triangles = [obj.triangles triangle_(obj.vertices(obj.indices(i,1),:),obj.vertices(obj.indices(i,2),:),obj.vertices(obj.indices(i,3),:),obj.materials(i))]; % obj.normals(i,:),
             end
         end
+        function new_axis(scale)
+            axis([-1 1 -1 1 -1 1]*scale)
+        end
    end
    methods(Access = public)
         function show(this,scale)
-            %shows mesh            
+            %shows mesh
             hold on
+            plot3(0,0,0,'O','Color','w','MarkerSize',10,'MarkerFaceColor','k');
+            line([0 0],[0 1e5],[0 0],'Color','k')
             for triangle = this.triangles
                 triangle.show()
             end
@@ -43,6 +48,6 @@ classdef mesh_ < handle
             ylabel('y [m]')
             zlabel('z [m]')
             grid on
-        end
+        end        
     end
 end
