@@ -1,30 +1,32 @@
 classdef debris_  < handle
     properties
-        position            %vector coordinates of position             [m]
-        path                %position history                           [m]
-        direction           %normalized vector of movement direction    [m]
-        velocity            %magnitude of the velocity                  [m/s]
-%         energy              %kinetic energy                             [J]
-        mass                %mass                                       [kg]
-        diameter            %diameter of the spehere formed debris      [m]
-        density             %debris material density                    [kg/m^3]
-        hit                 %what it is going to hit                    [-]
+        position            %vector coordinates of position [m]
+        path                %position history               [m]
+        direction           %velocity vector                [m]
+        velocity            %velocity vector                [m/s]
+        acceleration        %acceleration vector            [m/s^2]
+        mass                %mass of he debris              [kg]
+        diameter            %diameter of the debris         [m]
+        density             %debris material density        [kg/m^3]
+        hit                 %what it is going to hit        [-]
     end
     methods(Access = public,Static)
-        function obj = debris_(azimuth,elevation,distance,diameter)
+        function obj = debris_(azimuth,elevation,distance,diameter,dt)
             %initialize a debris object
             %input:
             % position      start position
             % diameter      diameter of sphere shaped debris
             % density       debris material density
             %output:
-            % obj           debris object with properties based on inputs            
-            obj.direction = [sin(azimuth)*cos(elevation) cos(azimuth)*cos(elevation) sin(elevation)];
-            obj.position  = -obj.direction*distance+[rand()-0.5 rand()-0.5 rand()-0.5]*55;
-            obj.velocity  = 14800*(1-abs(cos(azimuth/2)))+1200*rand();
+            % obj           debris object with properties based on inputs
+            
             obj.diameter  = diameter;
-            obj.density   = 2700;
-            obj.mass      = 4/3*pi*(diameter/2)^3*obj.density;
+            obj.mass      = 61*(diameter/2)^2.26;
+            
+            obj.direction = [0 1 0];%[sin(azimuth)*cos(elevation) cos(azimuth)*cos(elevation) sin(elevation)];
+            obj.position  = [0 0 6371e3+400e3];%+[rand()-0.5 rand()-0.5 rand()-0.5]*50;
+            obj.velocity  = 7700;
+            obj.get_start_position(distance,dt)            
 %             obj.energy    = obj.mass*obj.velocity^2/2;
         end
     end
@@ -43,19 +45,33 @@ classdef debris_  < handle
             c = [rand() rand() rand()];
             line(x,y,z,'Color',c)
         end
-        function get_path(this,dt)
-            nr_steps = min(ceil(sqrt(this.position(1)^2+this.position(2)^2+this.position(3)^2)/this.velocity/dt),50);
-            this.path = zeros(nr_steps,3);
-            for i = 1:nr_steps
-                this.get_movement()
-                this.position = this.position+(this.velocity.*this.direction)*dt;
-                this.path(i,:) = this.position;
-            end
+        function step(this,Fr,dt)
+            Fg = -3.9857e+14*this.position/((this.position(1)^2+this.position(2)^2+this.position(3)^2)^1.5);
+            this.acceleration = Fg+Fr/this.mass;
+            vel = this.velocity+this.acceleration.*dt;
+            this.velocity = sqrt(vel(1)^2+vel(2)^2+vel(3)^2);
+            this.direction = vel/this.velocity;
+            this.position = this.position+this.velocity.*dt;
+        end
+        function back_step(this,dt)
+            this.acceleration = -3.9857e+14*this.position/((this.position(1)^2+this.position(2)^2+this.position(3)^2)^1.5);
+            vel = this.velocity+this.acceleration.*dt;
+            this.velocity = sqrt(vel(1)^2+vel(2)^2+vel(3)^2);
+            this.direction = vel/this.velocity;
+            prev_position = this.position;
+            this.position = this.position-vel.*dt;
+            disp(this.position)
+            line([prev_position(1),this.position(1)],[prev_position(2),this.position(2)],[prev_position(3),this.position(3)],'LineWidth',1,'Color','k')             
         end
     end
     methods(Access = protected)
-        function get_movement(this)            
-%             this.direction = this.direction+([rand() rand() rand()]-0.5)/5;
+        function get_start_position(this,distance,dt)
+            dist = 0;
+            begin_position = this.position;
+            while dist < distance
+                this.back_step(-dt)
+                dist = sqrt((begin_position(1)-this.position(1))^2+(begin_position(2)-this.position(2))^2+(begin_position(3)-this.position(3))^2);
+            end
         end
     end
 end

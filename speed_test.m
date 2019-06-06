@@ -1,23 +1,12 @@
-% dr = 100;
-% R_E = 6.37e6;
-% rho = 2700;
-% m = 0.1^3*4/3*pi*2700;
-% C_m = 1e-5;
-% lambda = 0.35e-6;
-% D = 1.5;
-% d = 100e3;
-% Q = sqrt(2);
-% v = 10e3;
-% 
-% E_l = (rho^2*m)^(1/3)/(pi*C_m)*lambda^2*Q^4/(D^2)*d^2*v*dr/R_E
 close all
 clear
 
-dt = 1;
-steps = 10000;
+dt = 10;
+t = 10000;
+steps = t/dt;
 R = 6.371e6;
 M = 5.972e24;
-m = 0.07;
+m = 1.7;
 G = 6.674e-11;
 x_0 = [0 0 R+400e3];
 x = x_0;
@@ -40,28 +29,49 @@ xlabel('x [m]')
 ylabel('y [m]')
 zlabel('z [m]')
 grid on
+azi = rand()*2*pi;
+ele = rand()*pi-pi/2;
+deb = debris_(azi,ele,100e4,0.1,0.01);
 
-plot3(x(1),x(2),x(3),'O','Color','w','MarkerSize',10,'MarkerFaceColor','k')
-for i = 1:steps
-    r = sqrt(x(1)^2+x(2)^2+x(3)^2);
-    if r < R
-        disp("boom")
-        break
-    end
-    Fl = -10*v/sqrt(v(1)^2+v(2)^2+v(3)^2);
-    Fg = -G*M*m*x/(r^3);
-    F = Fg+Fl;
-    a = F/m;
-    v = v+a.*dt;
-    prev_x = x;
-    x = x+v.*dt;
-    line([prev_x(1),x(1)],[prev_x(2),x(2)],[prev_x(3),x(3)],'LineWidth',2,'Color','k')
-end
-plot3(x(1),x(2),x(3),'O','Color','w','MarkerSize',10,'MarkerFaceColor','r')
-mn = (x_0+x)/2;
-val = max(abs(x_0-x));
-impact = [mn(1) mn(1) mn(2) mn(2) mn(3) mn(3)]+[-1 1 -1 1 -1 1]*val*1;
-axis(impact)
+
+
+
+% axis([-0.0899    0.2697   -0.1798    0.1798 6.5341    6.8937]*1e6)
+% plot3(x(1),x(2),x(3),'O','Color','w','MarkerSize',10,'MarkerFaceColor','g')
+% tic
+% for i = 1:steps
+%     r = sqrt(x(1)^2+x(2)^2+x(3)^2);
+%     if r < R
+%         disp("boom")
+%         break
+%     end
+%     Fl = -2*[1 0 0];
+%     Fg = -G*M*m*x/(r^3);
+%     F = Fg+Fl;
+%     a = F/m;
+%     v = v+a.*dt;
+%     prev_x = x;
+%     x = x+v.*dt;
+%     line([prev_x(1),x(1)],[prev_x(2),x(2)],[prev_x(3),x(3)],'LineWidth',1,'Color','k') 
+% end
+% toc
+% r_0 = sqrt(x_0(1)^2+x_0(2)^2+x_0(3)^2); 
+% r_1 = sqrt(x(1)^2+x(2)^2+x(3)^2); 
+% disp(r_0)
+% disp(r_1)
+% disp(r_0-r_1)
+% plot3(x(1),x(2),x(3),'O','Color','w','MarkerSize',10,'MarkerFaceColor','r')
+% mn = (x_0+x)/2;
+% val = max(abs(x_0-x))/2;
+% impact = [mn(1) mn(1) mn(2) mn(2) mn(3) mn(3)]+[-1 1 -1 1 -1 1]*val*1.1;
+% axis(impact)
+
+
+
+
+
+
+
 % r1 = rand();
 % r2 = rand()
 % c1 = rand();
