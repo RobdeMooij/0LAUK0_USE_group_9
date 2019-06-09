@@ -8,25 +8,22 @@ obj = bpy.context.active_object
 #define empty dictionary/arrays
 data = {}
 vertices = []
-triangles = []
+indices = []
 materials = []
 normals = []
-
 #loop over vertices and scale them
 for vertex in obj.data.vertices.values():
     vertices.append((vertex.co.x*10,vertex.co.y*10,vertex.co.z*10))
     
-#loop over triangles and get indices+1 (for Matlab indexing), normals and material indices
+#loop over triangles and get indices+1 (for Matlab indexing) and material indices
 for triangle in obj.data.polygons:
-    triangles.append((triangle.vertices[0]+1,triangle.vertices[1]+1,triangle.vertices[2]+1))
-    normals.append(triangle.normal[:])
+    indices.append((triangle.vertices[0]+1,triangle.vertices[1]+1,triangle.vertices[2]+1))
     materials.append(triangle.material_index+1)
     
 #data into dictionary
-data["vertices"] = vertices
-data["triangles"] = triangles
+data["vertices"]  = vertices
+data["indices"]   = indices
 data["materials"] = materials
-data["normals"] = normals
 
 #dictionary to file
-json.dump(data,open('test.json','w'))
+json.dump(data,open('iss_1.json','w'))
