@@ -17,8 +17,8 @@ classdef Laser < handle
             obj.direction = obj.get_direction(azimuth,elevation);
             obj.azimuth   = azimuth;
             obj.elevation = elevation;
-            obj.omega     = 0.05;
-            obj.range     = 100e3; 
+            obj.omega     = 0.1;
+            obj.range     = 100e3;
             obj.power     = 100e3;
         end
     end
@@ -29,13 +29,13 @@ classdef Laser < handle
             z = [this.position(3) this.position(3)+this.direction(3)*dist];
 %             c = [0 0.8 1];
             c = [1 0 0];
-            hold on
-            plot3(this.position(1),this.position(2),this.position(3),'O','Color','k','MarkerSize',12,'MarkerFaceColor',c)
-            hold off
-            line(x,y,z,'LineWidth',5,'Color','k')
-            line(x,y,z,'LineWidth',4,'Color',c)
+%             hold on
+            plot3(this.position(1),this.position(2),this.position(3),'O','Color','k','MarkerSize',8,'MarkerFaceColor',c)
+%             hold off
+            line(x,y,z,'LineWidth',3,'Color','k')
+            line(x,y,z,'LineWidth',2,'Color',c)
         end
-        function take_aim(this,debris_pos)
+        function take_aim(this,debris_pos,dt)
             this.target = [debris_pos(1)-this.position(1) debris_pos(2)-this.position(2) debris_pos(3)-this.position(3)];
             this.target = this.target/sqrt(this.target(1)^2+this.target(2)^2+this.target(3)^2);
             [target_azimuth,target_elevation] = this.get_angles(this.target);
@@ -43,20 +43,20 @@ classdef Laser < handle
             if abs(azimuth_difference) > pi
                 azimuth_difference = azimuth_difference-pi*2*sign(azimuth_difference);
             end
-            if abs(azimuth_difference) <= this.omega
+            if abs(azimuth_difference) <= this.omega*dt
                 this.azimuth = target_azimuth;
             else
-                this.azimuth = this.azimuth+this.omega*sign(azimuth_difference);
+                this.azimuth = this.azimuth+this.omega*dt*sign(azimuth_difference);
             end
             elevation_difference = target_elevation-this.elevation;
-            if abs(elevation_difference) > pi
-                elevation_difference = elevation_difference-pi*2*sign(elevation_difference);
-                disp("haha")
-            end
-            if abs(elevation_difference) <= this.omega
+%             if abs(elevation_difference) > pi
+%                 elevation_difference = elevation_difference-pi*2*sign(elevation_difference);
+%                 disp("ele")
+%             end
+            if abs(elevation_difference) <= this.omega*dt
                 this.elevation = target_elevation;
             else
-                this.elevation = this.elevation+this.omega*sign(elevation_difference);
+                this.elevation = this.elevation+this.omega*dt*sign(elevation_difference);
             end
             this.direction = this.get_direction(this.azimuth,this.elevation);
         end

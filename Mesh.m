@@ -26,23 +26,27 @@ classdef Mesh < handle
                 obj.triangles = [obj.triangles Triangle(obj.vertices(obj.indices(i,1),:),obj.vertices(obj.indices(i,2),:),obj.vertices(obj.indices(i,3),:),obj.materials(i))]; % obj.normals(i,:),
             end
         end
-        function new_axis(scale)
-            axis([-1 1 -1 1 -1 1]*scale)
+        function new_axis(scale,offset)
+            axis([offset(1) offset(1) offset(2) offset(2) offset(3) offset(3)]+[-1 1 -1 1 -1 1]*scale)
         end
    end
    methods(Access = public)
-        function show(this,scale)
+        function show(this,scale,offset)
             %shows mesh
-            hold on
-            plot3(this.position(1),this.position(2),this.position(3),'O','Color','w','MarkerSize',10,'MarkerFaceColor','k');
-            line([0 0],[0 1e5],[0 0],'Color','k')
-            for triangle = this.triangles
-                triangle.show()
+            [az,el] = view;
+            if scale < 1000
+%                 hold on
+                for triangle = this.triangles
+                    triangle.show()
+                end
+%                 hold off
+            else
+                plot3(this.position(1),this.position(2),this.position(3),'O','Color','k','MarkerSize',12,'MarkerFaceColor',[1 1 0]);
+                line(this.position(1)+[0 scale/4],this.position(2)+[0 0],this.position(3)+[0 0],'Color','k','LineWidth',3)            
             end
-            hold off
-            view(20,45)
+            view(az,el)
             rotate3d on            
-            axis([this.position(1) this.position(1) this.position(2) this.position(2) this.position(3) this.position(3)]+[-1 1 -1 1 -1 1]*scale)
+            axis([offset(1) offset(1) offset(2) offset(2) offset(3) offset(3)]+[this.position(1) this.position(1) this.position(2) this.position(2) this.position(3) this.position(3)]+[-1 1 -1 1 -1 1]*scale)
             axis vis3d
             xlabel('x [m]')
             ylabel('y [m]')
