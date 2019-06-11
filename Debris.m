@@ -1,8 +1,8 @@
-classdef Debris  < handle
+classdef Debris < handle
     properties
         position            %vector coordinates of position [m]
-        direction           %velocity vector                [m]
-        velocity            %velocity vector                [m/s]
+        direction           %normalized velocity vector     [m]
+        velocity            %velocity magnitude             [m/s]
         acceleration        %acceleration vector            [m/s^2]
         mass                %mass of he debris              [kg]
         diameter            %diameter of the debris         [m]
@@ -10,14 +10,15 @@ classdef Debris  < handle
         steps = 0           %steps needed to hit ISS        [-]
     end
     methods(Access = public,Static)
-        function obj = Debris(azimuth,elevation,distance,diameter,dt,mesh)
+        function obj = Debris(azimuth,elevation,distance,diameter,dt)
             %initialize a debris object
             %input:
-            % azimuth       angle in the 
+            % azimuth       
             % elevation
             % distance
             % diameter
             % dt
+            % mesh
             %output:
             % obj           debris object with properties based on inputs
             
@@ -25,14 +26,9 @@ classdef Debris  < handle
             obj.mass      = 61*(diameter/2)^2.26;
             
             obj.direction = [cos(azimuth)*cos(elevation) sin(azimuth)*cos(elevation) sin(elevation)];
-            obj.position  = [0 0 6.371e6+400e3]+[rand()-0.5 rand()-0.5 rand()-0.5]*100;
+            obj.position  = [0 0 6.371e6+400e3]+[rand()-0.5 rand()-0.5 rand()-0.5]*0;
             obj.velocity  = 7700;
-            obj.get_start_position(distance,dt)            
-            start_pos     = obj.position;
-            for i = 1:obj.steps
-                obj.step(mesh,0,dt)
-            end
-            obj.position = start_pos;
+            obj.get_start_position(distance,dt)
         end
     end
     methods(Access = public)
@@ -48,10 +44,11 @@ classdef Debris  < handle
 %             hold off
             line(x,y,z,'Color',c,'LineWidth',3)
         end
-        function step(this,mesh,Fr,dt)
-            this.movement_force(Fr,dt)
-            this.movement_iss(dt)
-            this.check_impact(mesh)
+        function step(this,Fr,dt) 
+            if this.steps > 0
+                this.movement_force(Fr,dt)
+                this.movement_iss(dt)
+            end
         end
         function movement_force(this,Fr,dt)
             Fg = -3.9857e+14*this.position/((this.position(1)^2+this.position(2)^2+this.position(3)^2)^1.5);
@@ -72,17 +69,30 @@ classdef Debris  < handle
                                ct(:,3).*st(:,2).*ct(:,1) + st(:,3).*st(:,1) ct(:,3).*st(:,2).*st(:,1) - st(:,3).*ct(:,1)  ct(:,3).*ct(:,2)];
             this.position = this.position*rotation_matrix;
         end
-        function check_impact(this,mesh)
-            distance_to_iss = sqrt((mesh.position(1)-this.position(1))^2+(mesh.position(2)-this.position(2))^2+(mesh.position(3)-this.position(3))^2);
-            if distance_to_iss < 65
-                min_dist = inf;
-                for triangle = mesh.triangles
-                    [hit,dist] = ray_hit_triangle(this,triangle);
-                    if dist < min_dist
-                        min_dist = dist;
-                        this.impact = hit;
-                    end
+        function check_impact(this,mesh,dt)
+            if this.steps > 0
+                original_position  = this.position;
+                original_direction = this.direction;
+                original_velocity  = this.velocity;
+                diff = 1;
+                this.steps = 0;
+                while diff > 0
+                    dist_before = sqrt((mesh.position(1)-this.position(1))^2+(mesh.position(2)-this.position(2))^2+(mesh.position(3)-this.position(3))^2);
+                    this.steps = this.steps+1;
+                    this.step(0,dt)                    
+                    dist_after = sqrt((mesh.position(1)-this.position(1))^2+(mesh.position(2)-this.position(2))^2+(mesh.position(3)-this.position(3))^2);
+                    diff = dist_before-dist_after;
+                    this.impact = 0;
+                    if dist_after <= this.velocity*dt+60
+                        min_dist = this.hit_mesh(mesh);
+                        if min_dist <= this.velocity*dt
+                            break
+                        end
+                    end                
                 end
+                this.position  = original_position;
+                this.direction = original_direction;
+                this.velocity  = original_velocity;
             end
         end
     end
@@ -92,14 +102,27 @@ classdef Debris  < handle
             dist = 0;
             while dist < distance
                 prev_pos = this.position;
-                this.movement_force(0,dt)
-                d_dist = sqrt((prev_pos(1)-this.position(1))^2+(prev_pos(2)-this.position(2))^2+(prev_pos(3)-this.position(3))^2);
+                this.movement_force(0,dt)                
                 this.movement_iss(-dt)
+                d_dist = sqrt((prev_pos(1)-this.position(1))^2+(prev_pos(2)-this.position(2))^2+(prev_pos(3)-this.position(3))^2);
                 dist = dist+d_dist;
                 this.steps = this.steps + 1;
+                if this.steps > 30/dt
+                    break
+                end
             end
 %             plot3(this.position(1),this.position(2),this.position(3),'O','Color','k','MarkerSize',10,'MarkerFaceColor','r')
             this.direction = -this.direction;            
+        end
+        function min_dist = hit_mesh(this,mesh)            
+            min_dist = inf;
+            for triangle = mesh.triangles
+                [triangle_hit_type,dist] = ray_hit_triangle(this,triangle);
+                if dist < min_dist
+                    min_dist = dist;
+                    this.impact = triangle_hit_type;                    
+                end
+            end
         end
     end
 end

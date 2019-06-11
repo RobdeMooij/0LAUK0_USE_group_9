@@ -1,59 +1,131 @@
 clear
-% close all
-laser_specs = [ 15.5666 -9.05011    -5.256      -pi/8   pi/8;
-                18.2369 17.3792     -4.583      pi/8    pi/8;
-                -40.028 0           -5.437      pi      pi/8];
+close all
+mesh_dir = "C:\Users\s167917\Documents\#School\Jaar 3\4 Project USE Robots Everywhere\model\iss_2.json";
+laser_specs = {
+    %case 1:    no lasers
+%     [];
 
-scale = 120e3;
-offset = [80e3 0 0];
-system.mesh   = Mesh("C:\Users\s167917\Documents\#School\Jaar 3\4 Project USE Robots Everywhere\model\iss_2.json");
-system.lasers = init_lasers(laser_specs,system.mesh.position);
+    %case 2:    2 front, 1 back
+    [15.5666 -9.05011   -5.256      -pi/8   pi/8;
+     18.2369 17.3792    -4.583       pi/8   pi/8;
+    -40.028 0           -5.437       pi     pi/8]
+    
+    %
+    };
+
+azimuth_steps   = 20;
+elevation_steps = 5;
+diameter_steps  = 10;
+
+update_steps    = 25;
+dt              = 0.01;
+
+scale           = 100e3;
+distance        = 100e3;
+offset          = [50e3 0 0];
+
+azimuth_min     = -pi;
+azimuth_max     = pi;
+elevation_min   = 0;
+elevation_max   = pi/4;
+diameter_min    = 0.01;
+diameter_max    = 0.10; 
+
+
+
+%save:  case   diameter   azimuth   elevation   impact   velocity
+azimuth_step    = (azimuth_max-azimuth_min)/(azimuth_steps-1);
+elevation_step  = (elevation_max-elevation_min)/(elevation_steps-1);
+diameter_step   = (diameter_max-diameter_min)/(diameter_steps-1);
+system.mesh     = Mesh(mesh_dir);
+colors          = {[0 1 1],[0 1 0],[1 0.5 0],[1 0 0]};
+nr_debris       = azimuth_steps*elevation_steps*diameter_steps;
+nr_cases        = size(laser_specs,1);
+print_string    = strings(4,nr_cases);
+data            = zeros(nr_debris,6,nr_cases);
+figure('units','normalized','outerposition',[0 0.12 0.5 0.9],'color','w')
 view(-30,30)
-colors = {[0 1 1],[0 1 0],[1 0.5 0],[1 0 0]};
-
-dt = 0.01;
-steps_per_draw = 100;
-total_debris = 2000;
-hit_debris = 0;
-tic
-for i = 1:total_debris
-    azimuth = rand()*pi*2;
-    elevation = rand()*pi/2;
-    diameter = 0.1;
-    system.debris = Debris(azimuth,elevation,scale,diameter,dt,system.mesh);
-    if system.debris.impact ~= 0
-        hit_debris = hit_debris+1;
-        reset_lasers(system,laser_specs)
-        for j = 1:ceil(system.debris.steps/steps_per_draw)
-            steps(system,steps_per_draw,dt)
-%             show_all(system,scale,offset,colors)
+hold on
+for current_case = 1:nr_cases
+    system.lasers = init_lasers(laser_specs{current_case},system.mesh.position);
+    class_hit = [0 0 0 0];
+    tic
+    percentage = 0;
+    for diameter = diameter_min:diameter_step:diameter_max        
+        for azimuth = azimuth_min:azimuth_step:azimuth_max
+            for elevation = elevation_min:elevation_step:elevation_max
+                diameter = 0.01+rand()*0.09;
+                azimuth = rand()*2*pi-pi;
+                elevation = rand()*pi/4;
+                reset_lasers(system,laser_specs{current_case})
+                system.debris = Debris(azimuth,elevation,distance,diameter,dt);
+                while system.debris.steps > 0
+                    steps(system,update_steps,dt)
+                    show_all(system,scale,offset,colors)            
+                end
+                class_hit(system.debris.impact+1) = class_hit(system.debris.impact+1)+1;
+                percentage = percentage+100/nr_debris;
+                clc
+                fprintf('case %0.0f: %0.1f%%',current_case,percentage)
+                
+                impact_velocity = system.debris.direction*system.debris.velocity;
+                impact_velocity = sqrt((impact_velocity(1)-7.7e3)^2+impact_velocity(2)^2+impact_velocity(3)^2);
+                data(round(percentage/100*nr_debris),:,current_case) = [current_case diameter azimuth elevation system.debris.impact impact_velocity];                
+            end
         end
     end
+    time_elapsed = toc;
+    print_string(1,current_case) = sprintf('#case %0.0f',current_case);
+    print_string(2,current_case) = sprintf('miss: %0.0f, green: %0.0f, orange: %0.0f, red: %0.0f',class_hit(1),class_hit(2),class_hit(3),class_hit(4));
+    print_string(3,current_case) = sprintf('elapsed time: %0.4f sec (%0.2f debris/sec)',time_elapsed,nr_debris/time_elapsed);
 end
-time_elapsed = toc;
-fprintf('%0.0f out of %0.0f debris hit (%0.1f%%)\nprocessed in %0.2f sec (%0.5f sec per debris)\n',hit_debris,total_debris,hit_debris/total_debris*100,time_elapsed,time_elapsed/total_debris)
+clc
+fprintf('total number of debris: %0.0f\n\n',nr_debris)
+for str = print_string
+    disp(char(str))
+end
 
 function steps(system,nr_steps,dt)
     for i = 1:nr_steps
-        Fl = 0;
-        system.debris.step(system.mesh,Fl,dt)
+        Fl = [0 0 0];
         for j = 1:size(system.lasers,2)
             system.lasers(j).take_aim(system.debris.position,dt);
+            if system.lasers(j).vision == true
+                Fl = Fl+get_force(system.lasers(j),system.debris.diameter);
+            end
+        end
+        system.debris.step(Fl,dt)
+        system.debris.steps = system.debris.steps-1;
+        if system.debris.steps <= 0
+            break
         end
     end
+    system.debris.check_impact(system.mesh,dt)
+end
+
+function force_vec = get_force(laser,d)   
+%     b = a*M^2*lambda*L/D;
+    b = 0.02;
+    Ep = 10;
+    Ed = Ep*min(1,(d/b)^2);
+    Cm = 1e-4;
+    R = 1e4;
+    F = Cm*Ed*R;
+    force_vec = laser.direction*F;
+%     fprintf('F: %0.2f\n',F)
 end
 
 function show_all(system,scale,offset,colors)
     cla
-    hold on
+%     hold on
     system.mesh.show(scale,offset)
     for i = 1:size(system.lasers,2)
-    	system.lasers(i).show(scale/8)
+    	system.lasers(i).show(scale/6)
     end
     c = colors{system.debris.impact+1};
     system.debris.show(scale/4,c)    
     draw_lines(system.debris.position,scale*99,c)
-    hold off
+%     hold off
     drawnow
 end
 
@@ -65,9 +137,13 @@ function draw_lines(position,scale,c)
 end
 
 function lasers = init_lasers(laser_specs,origin)
-    lasers = Laser(origin+laser_specs(1,1:3),laser_specs(1,4),laser_specs(1,5));
-    for i = 2:size(laser_specs,1)
-        lasers = [lasers Laser(origin+laser_specs(i,1:3),laser_specs(i,4),laser_specs(i,5))];
+    if size(laser_specs,1) > 0
+        lasers = Laser(origin+laser_specs(1,1:3),laser_specs(1,4),laser_specs(1,5));
+        for i = 2:size(laser_specs,1)
+            lasers = [lasers Laser(origin+laser_specs(i,1:3),laser_specs(i,4),laser_specs(i,5))];
+        end
+    else
+        lasers = [];
     end
 end
 

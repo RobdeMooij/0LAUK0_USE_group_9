@@ -9,7 +9,7 @@ classdef Laser < handle
         distance            %distance to debris                         [m]
         power               %total avaiable power for laser             [W]
         range               %range of the laser                         [m]
-%         vision              %ability of laser to 'see' debris           []
+        vision = false      %boolean: facing debris                     [-] 
     end
     methods(Access = public,Static)
         function obj = Laser(position,azimuth,elevation)
@@ -30,10 +30,10 @@ classdef Laser < handle
 %             c = [0 0.8 1];
             c = [1 0 0];
 %             hold on
-            plot3(this.position(1),this.position(2),this.position(3),'O','Color','k','MarkerSize',8,'MarkerFaceColor',c)
+            plot3(this.position(1),this.position(2),this.position(3),'O','Color','k','MarkerSize',4,'MarkerFaceColor',c)
 %             hold off
-            line(x,y,z,'LineWidth',3,'Color','k')
-            line(x,y,z,'LineWidth',2,'Color',c)
+            line(x,y,z,'LineWidth',2,'Color','k')
+            line(x,y,z,'LineWidth',1,'Color',c)
         end
         function take_aim(this,debris_pos,dt)
             this.target = [debris_pos(1)-this.position(1) debris_pos(2)-this.position(2) debris_pos(3)-this.position(3)];
@@ -49,14 +49,16 @@ classdef Laser < handle
                 this.azimuth = this.azimuth+this.omega*dt*sign(azimuth_difference);
             end
             elevation_difference = target_elevation-this.elevation;
-%             if abs(elevation_difference) > pi
-%                 elevation_difference = elevation_difference-pi*2*sign(elevation_difference);
-%                 disp("ele")
-%             end
             if abs(elevation_difference) <= this.omega*dt
                 this.elevation = target_elevation;
+                if this.azimuth == target_azimuth
+                    this.vision = true;
+                else
+                    this.vision = false;
+                end
             else
                 this.elevation = this.elevation+this.omega*dt*sign(elevation_difference);
+                this.vision = false;
             end
             this.direction = this.get_direction(this.azimuth,this.elevation);
         end

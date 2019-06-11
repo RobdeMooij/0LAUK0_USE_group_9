@@ -42,7 +42,7 @@ classdef Mesh < handle
 %                 hold off
             else
                 plot3(this.position(1),this.position(2),this.position(3),'O','Color','k','MarkerSize',12,'MarkerFaceColor',[1 1 0]);
-                line(this.position(1)+[0 scale/4],this.position(2)+[0 0],this.position(3)+[0 0],'Color','k','LineWidth',3)            
+%                 line(this.position(1)+[0 scale/4],this.position(2)+[0 0],this.position(3)+[0 0],'Color','k','LineWidth',3)            
             end
             view(az,el)
             rotate3d on            
