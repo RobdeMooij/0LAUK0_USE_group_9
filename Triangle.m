@@ -25,7 +25,7 @@ classdef Triangle < handle
             y = [this.point_1(2) this.point_2(2) this.point_3(2)];
             z = [this.point_1(3) this.point_2(3) this.point_3(3)];
 %             c = {[0 1 0],[1 1 0],[1 0 0]};
-            c = {[0 1 0],[1 1 0],[1 0.5 0]};
+            c = {[0 1 0],[1 1 0],[1 0.7 0]};
             patch(x,y,z,c{this.material})
         end
     end

@@ -1,15 +1,14 @@
 classdef Laser < handle
     properties
         position            %vector coordinates of position             [m]
-        omega               %angular velocity                           [rad]
+        omega               %angular velocity                           [rad/s]
         azimuth
         elevation
         target
         direction           %normalized vector of aiming direction      [m]
         distance            %distance to debris                         [m]
-        power               %total avaiable power for laser             [W]
         range               %range of the laser                         [m]
-        vision = false      %boolean: facing debris                     [-] 
+        vision = false      %boolean: facing debris                     [-]
     end
     methods(Access = public,Static)
         function obj = Laser(position,azimuth,elevation)
@@ -19,7 +18,6 @@ classdef Laser < handle
             obj.elevation = elevation;
             obj.omega     = 0.1;
             obj.range     = 100e3;
-            obj.power     = 100e3;
         end
     end
     methods(Access = public)
@@ -27,21 +25,25 @@ classdef Laser < handle
             x = [this.position(1) this.position(1)+this.direction(1)*dist];
             y = [this.position(2) this.position(2)+this.direction(2)*dist];
             z = [this.position(3) this.position(3)+this.direction(3)*dist];
-%             c = [0 0.8 1];
-            c = [1 0 0];
-%             hold on
-            plot3(this.position(1),this.position(2),this.position(3),'O','Color','k','MarkerSize',4,'MarkerFaceColor',c)
-%             hold off
-            line(x,y,z,'LineWidth',2,'Color','k')
-            line(x,y,z,'LineWidth',1,'Color',c)
+            if this.vision
+                plot3(this.position(1),this.position(2),this.position(3),'O','Color','k','MarkerSize',4,'MarkerFaceColor','r')
+                line(x,y,z,'LineWidth',2,'Color','r')
+%                 line(x,y,z,'LineWidth',1,'Color','r')
+            else
+                plot3(this.position(1),this.position(2),this.position(3),'O','Color','k','MarkerSize',4,'MarkerFaceColor','c')
+                line(x,y,z,'LineWidth',2,'Color','c')
+%                 line(x,y,z,'LineWidth',1,'Color','c')
+            end
         end
         function take_aim(this,debris_pos,dt)
             this.target = [debris_pos(1)-this.position(1) debris_pos(2)-this.position(2) debris_pos(3)-this.position(3)];
-            this.target = this.target/sqrt(this.target(1)^2+this.target(2)^2+this.target(3)^2);
+            distance_to_debris = sqrt(this.target(1)^2+this.target(2)^2+this.target(3)^2);
+            this.target = this.target/distance_to_debris;
             [target_azimuth,target_elevation] = this.get_angles(this.target);
             azimuth_difference = target_azimuth-this.azimuth;
             if abs(azimuth_difference) > pi
                 azimuth_difference = azimuth_difference-pi*2*sign(azimuth_difference);
+                this_should_never_be_shown
             end
             if abs(azimuth_difference) <= this.omega*dt
                 this.azimuth = target_azimuth;
@@ -51,16 +53,19 @@ classdef Laser < handle
             elevation_difference = target_elevation-this.elevation;
             if abs(elevation_difference) <= this.omega*dt
                 this.elevation = target_elevation;
-                if this.azimuth == target_azimuth
-                    this.vision = true;
-                else
-                    this.vision = false;
-                end
             else
                 this.elevation = this.elevation+this.omega*dt*sign(elevation_difference);
-                this.vision = false;
             end
             this.direction = this.get_direction(this.azimuth,this.elevation);
+%             disp(this.azimuth)
+%             disp(this.elevation)
+%             disp(this.direction)
+%             disp(this.target)
+            if distance_to_debris <= this.range && all(this.direction == this.target)
+                this.vision = true;
+            else                
+                this.vision = false;
+            end
         end
 %         function ablate(this,target,duration)
 %             beam_energy = min(target.energy,this.power);

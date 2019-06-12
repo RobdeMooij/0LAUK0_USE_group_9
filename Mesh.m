@@ -31,22 +31,19 @@ classdef Mesh < handle
         end
    end
    methods(Access = public)
-        function show(this,scale,offset)
-            %shows mesh
+        function show(this,axis_area,draw_mesh)
             [az,el] = view;
-            if scale < 1000
-%                 hold on
+            if draw_mesh
                 for triangle = this.triangles
                     triangle.show()
                 end
-%                 hold off
             else
                 plot3(this.position(1),this.position(2),this.position(3),'O','Color','k','MarkerSize',12,'MarkerFaceColor',[1 1 0]);
-%                 line(this.position(1)+[0 scale/4],this.position(2)+[0 0],this.position(3)+[0 0],'Color','k','LineWidth',3)            
+                line(this.position(1)+[0 (axis_area(2)-axis_area(1))/16],this.position(2)+[0 0],this.position(3)+[0 0],'Color','b','LineWidth',1.5)            
             end
             view(az,el)
             rotate3d on            
-            axis([offset(1) offset(1) offset(2) offset(2) offset(3) offset(3)]+[this.position(1) this.position(1) this.position(2) this.position(2) this.position(3) this.position(3)]+[-1 1 -1 1 -1 1]*scale)
+            axis(axis_area)
             axis vis3d
             xlabel('x [m]')
             ylabel('y [m]')
