@@ -6,7 +6,7 @@ mesh_dir  = "C:\Users\s167917\Documents\#School\Jaar 3\4 Project USE Robots Ever
 video_dir = "C:\Users\s167917\Documents\#School\Jaar 3\4 Project USE Robots Everywhere\model\videos\";
 laser_specs = {
     %case 1:    no lasers
-%     [];
+    [];
     
     %case 2:    1 front
     [16.9017    4.1645     -4.920       0      pi/8]
@@ -31,10 +31,11 @@ diameter_steps  = 3;
 show_update     = true;
 % save_video      = false;
 save_video      = true;
-update_steps    = 10;
+update_steps    = 20;
 dt              = 0.01;
-detailed_factor = 0.2;
+detailed_factor = 0.1;
 
+debris_offset   = [rand()-0.5 rand()-0.5 rand()-0.5]*0;
 distance        = 100e3;
 threshold_dist  = 500;
 system.power    = 150e3;
@@ -43,11 +44,10 @@ azimuth_min     = -pi/4;
 azimuth_max     = pi/4;
 elevation_min   = 0;
 elevation_max   = pi/4;
-diameter_min    = 0.01;
-diameter_max    = 0.10; 
+diameter_min    = 0.05;
+diameter_max    = 0.10;
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-debris_offset   = [rand()-0.5 rand()-0.5 rand()-0.5]*0;
 system.mesh     = Mesh(mesh_dir);
 colors          = {[0 0 0],[0 1 0],[1 1 0],[1 0.5 0]};
 azimuth_step    = (azimuth_max-azimuth_min)/(azimuth_steps-1);
@@ -62,7 +62,7 @@ azimuth_list    = azimuth_min:azimuth_step:azimuth_max;
 elevation_list  = elevation_min:elevation_step:elevation_max;
 if show_update
     if save_video
-        figure_outer_pos = [0 0.12 0.5 0.9];%[0 0 0.5625 1];
+        figure_outer_pos = [0 0 0.5625 1];
     else
         figure_outer_pos = [0 0.12 0.5 0.9];
     end
@@ -97,48 +97,54 @@ for current_case = 1:nr_cases
                 if show_update
                     axis_area = get_axis_area(system);
                     axis(axis_area)
-                    view(30,36) %azimuth/pi*180+
+                    view(30,24) %azimuth/pi*180+
                     scale = axis_area(2)-axis_area(1);
                 end
-                detailed = false;
-                while system.debris.steps > 0
-                    if detailed == false
-                        detailed = steps(system,update_steps,threshold_dist,dt);
-                        if show_update   
-                            show_all_big(system,axis_area,scale,colors{system.debris.impact+1})
+                next = 0;
+                impact = 1;
+                while true
+                    if next == 0
+                        next = steps(system,update_steps,threshold_dist,dt);
+                        if show_update
+                            show_all_big(system,axis_area,scale,colors{impact})
+                        end
+                    elseif next == 1
+                        temp_dt = dt*detailed_factor;
+                        next = step(system,temp_dt);
+                        [impact,extra_info] = get_end_impact(system,temp_dt);                        
+                        if show_update
+                            show_all_small(system,extra_info,colors{impact})
+                        end
+                        if size(extra_info,2) == 3
+                            break
                         end
                     else
-                        threshold_step(system,dt*detailed_factor)
-%                         system.debris.steps = round(system.debris.steps*detailed_factor);
-%                         disp(threshold_dist*system.debris.velocity/dt)
-%                         disp(system.debris.steps)
-                        if show_update
-                            show_all_small(system,colors{system.debris.impact+1})
-                        end
+                        break
                     end                    
                     if save_video
                        frame = getframe(gcf);
                        writeVideo(new_video,frame);  
                     end                    
                 end
-                class_hit(system.debris.impact+1) = class_hit(system.debris.impact+1)+1;
+                class_hit(impact) = class_hit(impact)+1;
                 percentage = percentage+100/nr_debris;
                 clc
-                fprintf('case %0d: %0.2f%%',current_case,percentage)
-                
-                if system.debris.impact ~= 0
+                fprintf('case %0d: %0.2f%%',current_case,percentage)                
+                if impact ~= 1
                     impact_velocity = system.debris.direction*system.debris.velocity;
                     impact_velocity = sqrt((impact_velocity(1)-7.7e3)^2+impact_velocity(2)^2+impact_velocity(3)^2);
                 else
                     impact_velocity = 0;
                 end
-                data(round(percentage/100*nr_debris),:,current_case) = [current_case diameter azimuth elevation system.debris.impact impact_velocity];
+                data(round(percentage/100*nr_debris),:,current_case) = [current_case diameter azimuth elevation impact impact_velocity];
                 if save_video
-                    for extra_frames = 1:72
-                        [az,el] = view;
-                        view(az+15,el-1)
-                        frame = getframe(gcf);
-                        writeVideo(new_video,frame);  
+                    if next ~= 2
+                        for extra_frames = 1:72
+                            [az,el] = view;
+                            view(az+5,el-0.4)
+                            frame = getframe(gcf);
+                            writeVideo(new_video,frame);  
+                        end
                     end
                     close(new_video)
                 end                
@@ -157,70 +163,103 @@ for str = print_string
 end
 fprintf('total time elapsed: %0.0fs\n',toc(all_time))
 
-function threshold_reached = steps(system,nr_steps,threshold_dist,dt)
-    threshold_reached = false;
-    for i = 1:nr_steps
-        Fl = [0 0 0];
-        nr_vision_lasers = 0;
-        for j = 1:size(system.lasers,2)
-            system.lasers(j).take_aim(system.debris.position,dt);            
-            if system.lasers(j).vision == true
-                nr_vision_lasers = nr_vision_lasers+1;
-            end
+function [color_index_impact,extra_info] = get_end_impact(system,dt)    
+    dist_to_iss = sqrt((system.debris.position(1)-system.mesh.position(1))^2+(system.debris.position(2)-system.mesh.position(2))^2+(system.debris.position(3)-system.mesh.position(3))^2);
+    net_direction = system.debris.direction*system.debris.velocity-[7.7e3 0 0];
+    net_direction = net_direction/sqrt(net_direction(1)^2+net_direction(2)^2+net_direction(3)^2);
+    if dist_to_iss <= system.debris.velocity*dt+60
+        [triangle_hit_type,min_dist] = hit_mesh(system.debris.position,net_direction,system.mesh.triangles);
+        if min_dist <= system.debris.velocity*dt
+            color_index_impact = triangle_hit_type+1;
+            extra_info = system.debris.position+net_direction*min_dist;
+        else
+            color_index_impact = 1;
+            extra_info = [system.debris.position+net_direction*system.debris.velocity*dt 0];
         end
-        for j = 1:size(system.lasers,2)            
-            if system.lasers(j).vision == true
-                Fl = Fl+get_force(min(100e3,system.power/nr_vision_lasers),system.lasers(j).direction,system.debris.diameter);
-            end
-        end
-        system.debris.step_rough(Fl,dt)
-        step_threshold = threshold_dist/system.debris.velocity/dt;
-        if system.debris.steps <= step_threshold
-            threshold_reached = true;
-            return
-        end
-    end
-    if system.debris.steps > 0
-        system.debris.check_impact(system.mesh,dt)
+    else
+        color_index_impact = 1;
+        extra_info = [system.debris.position+net_direction*system.debris.velocity*dt 0];
     end
 end
 
-function threshold_step(system,dt)
-    Fl = [0 0 0];
+function [triangle_hit_type,min_dist] = hit_mesh(position,direction,triangles)
+    min_dist = 1e10;
+    triangle_hit_type = 0;
+    for triangle = triangles
+        [hit,dist] = ray_hit_triangle(position,direction,triangle);
+        if dist < min_dist
+            min_dist = dist;
+            triangle_hit_type = hit;
+        end
+    end
+end
+
+function next = steps(system,nr_steps,threshold_dist,dt)
+%     actual_steps = 0;
+    next = 0;
+    for i = 1:nr_steps
+%         actual_steps = actual_steps+1;
+        dist = sqrt((system.debris.position(1)-system.mesh.position(1))^2+(system.debris.position(2)-system.mesh.position(2))^2+(system.debris.position(3)-system.mesh.position(3))^2);
+        laser_force = get_laser_force(system,dt);
+        system.debris.step(laser_force,dt)
+        new_dist = sqrt((system.debris.position(1)-system.mesh.position(1))^2+(system.debris.position(2)-system.mesh.position(2))^2+(system.debris.position(3)-system.mesh.position(3))^2);
+        if new_dist <= threshold_dist
+            next = 1;
+            break
+        end
+        if dist < new_dist 
+            next = 2;
+            break
+        end
+    end
+%     fprintf('%0d,%0d',nr_steps,actual_steps)    
+end
+
+function next = step(system,dt)
+    dist = sqrt((system.debris.position(1)-system.mesh.position(1))^2+(system.debris.position(2)-system.mesh.position(2))^2+(system.debris.position(3)-system.mesh.position(3))^2);
+    laser_force = get_laser_force(system,dt);
+    system.debris.step(laser_force,dt)
+    new_dist = sqrt((system.debris.position(1)-system.mesh.position(1))^2+(system.debris.position(2)-system.mesh.position(2))^2+(system.debris.position(3)-system.mesh.position(3))^2);
+    if dist > new_dist 
+        next = 1;
+    else
+        next = 3;
+    end
+end
+
+function force_vec = get_laser_force(system,dt)
+    force_vec = [0 0 0];
     nr_vision_lasers = 0;
-    for j = 1:size(system.lasers,2)
-        system.lasers(j).take_aim(system.debris.position,dt);            
-        if system.lasers(j).vision == true
+    for i = 1:size(system.lasers,2)
+        system.lasers(i).take_aim(system.debris.position,dt);            
+        if system.lasers(i).vision == true
             nr_vision_lasers = nr_vision_lasers+1;
         end
     end
-    for j = 1:size(system.lasers,2)            
-        if system.lasers(j).vision == true
-            Fl = Fl+get_force(system.power/nr_vision_lasers,system.lasers(j).direction,system.debris.diameter);
+    for i = 1:size(system.lasers,2)            
+        if system.lasers(i).vision == true
+            power = min(100e3,system.power/nr_vision_lasers);
+            force_mag = get_force(power,system.debris.diameter);
+            force_vec = force_vec+system.lasers(i).direction*force_mag;
         end
     end
-    system.debris.step(Fl,dt)    
-    if system.debris.steps > 0
-        system.debris.check_impact(system.mesh,dt)
-    end
-    system.debris.steps = system.debris.steps-1;
 end
 
-function force_vec = get_force(power,direction,d)   
+function force = get_force(power,d)   
 %     a       = 0.85;
 %     M2      = 1;
 %     lambda  = 0.35e-6;
 %     L       = 100e3;
 %     D       = 1.5;
 %     b       = a*M2*lambda*L/D;
-    Ep      = 10;
-    b       = 0.02;
-    Cm      = 1e-4;
-    Ed      = Ep*min(1,(d/b)^2);    
-    R       = power/Ep;
-    F       = Cm*Ed*R;
+    Ep    = 10;
+    b     = 0.02;
+    Cm    = 1e-4;
+    Ed    = Ep*min(1,(d/b)^2);    
+    R     = power/Ep;
+    force = Cm*Ed*R;
 %     fprintf('R:%0.0f F:%0.2f\n',R,F)
-    force_vec = direction*F;
+
 end
 
 function show_all_big(system,axis_area,scale,c)
@@ -229,20 +268,24 @@ function show_all_big(system,axis_area,scale,c)
     for i = 1:size(system.lasers,2)
         system.lasers(i).show(scale/10)
     end
-    system.debris.show_vel(scale/8)    
-    draw_lines(system.debris.position,1e10,1.5,c)
+    draw_lines(system.debris.position,1e10,1,c)
+    system.debris.show_vel(scale/8)
     drawnow
 end
 
-function show_all_small(system,c)
+function show_all_small(system,extra_info,c)
     cla    
     new_axis_area = get_axis_area(system);
     system.mesh.show(new_axis_area,true)
     for i = 1:size(system.lasers,2)
-        system.lasers(i).show(50)
+        system.lasers(i).show(30)
     end
-    system.debris.show_net()
-    draw_lines(system.debris.position,1e10,1,c)
+    draw_lines(system.debris.position,1e10,0.1,c)
+    if size(extra_info,2) == 3
+        system.debris.show_net(extra_info,true)
+    else
+        system.debris.show_net(extra_info(1:3),false)
+    end    
     drawnow
 end
 
@@ -256,7 +299,7 @@ function axis_area = get_axis_area(system)
 end
 
 function draw_lines(position,scale,linewidth,c)
-    x = [position(1) scale];y = [position(2) position(2)];z = [position(3) position(3)];line(x,y,z,'Color',c,'LineWidth',linewidth);
+%     x = [position(1) scale];y = [position(2) position(2)];z = [position(3) position(3)];line(x,y,z,'Color',c,'LineWidth',linewidth);
     x = [position(1) position(1)];y = [-scale scale];z = [position(3) position(3)];line(x,y,z,'Color',c,'LineWidth',linewidth);
     x = [position(1) position(1)];y = [position(2) position(2)];z = [-scale scale];line(x,y,z,'Color',c,'LineWidth',linewidth);      
 end
@@ -279,7 +322,6 @@ function reset_lasers(system,laser_specs)
     end
 end
 
-
 % laser_specs = [ 50  50  50    rand()*2*pi    rand()*pi-pi/2;
 %                 50  50  -50   rand()*2*pi    rand()*pi-pi/2;
 %                 50  -50  50   rand()*2*pi    rand()*pi-pi/2;
@@ -289,3 +331,43 @@ end
 %                 -50  -50  50  rand()*2*pi    rand()*pi-pi/2;
 %                 -50  -50  -50 rand()*2*pi    rand()*pi-pi/2];
 % laser_specs = [0 0 0 rand()*2*pi rand()*pi-pi/2];
+
+%SLOOOOOOOOOOOOOOOOOOOOOOOOOOOW
+% function [color_index_impact,extra_info] = get_impact(system,dt)
+%     nr_steps = 0;
+%     original_position  = system.debris.position;
+%     original_direction = system.debris.direction;
+%     original_velocity  = system.debris.velocity;
+%     step_next = false;
+%     while true
+%         nr_steps = nr_steps+1;
+%         dist_to_iss = sqrt((system.debris.position(1)-system.mesh.position(1))^2+(system.debris.position(2)-system.mesh.position(2))^2+(system.debris.position(3)-system.mesh.position(3))^2);
+%         if dist_to_iss <= system.debris.velocity*dt+60 && step_next == false
+%             net_direction = system.debris.direction*system.debris.velocity-[7.7e3 0 0];
+%             net_direction = net_direction/sqrt(net_direction(1)^2+net_direction(2)^2+net_direction(3)^2);
+%             [triangle_hit_type,min_dist] = hit_mesh(system.debris.position,net_direction,system.mesh.triangles);
+%             if min_dist <= system.debris.velocity*dt
+%                 color_index_impact = triangle_hit_type+1;
+%                 extra_info = system.debris.position+net_direction*min_dist;
+%                 break
+%             else
+%                 step_next = true;
+%             end
+%         else
+%             system.debris.step(0,dt)
+%             new_dist_to_iss = sqrt((system.debris.position(1)-system.mesh.position(1))^2+(system.debris.position(2)-system.mesh.position(2))^2+(system.debris.position(3)-system.mesh.position(3))^2);
+%             if new_dist_to_iss >= dist_to_iss
+%                 color_index_impact = 1;
+%                 net_direction = system.debris.direction*system.debris.velocity-[7.7e3 0 0];
+%                 net_direction = net_direction/sqrt(net_direction(1)^2+net_direction(2)^2+net_direction(3)^2);
+%                 extra_info = [system.debris.position+net_direction*system.debris.velocity*dt 0];
+%                 break
+%             end
+%             step_next = false;
+%         end
+%     end
+%     system.debris.position  = original_position;
+%     system.debris.direction = original_direction;
+%     system.debris.velocity  = original_velocity;
+%     disp(nr_steps)
+% end

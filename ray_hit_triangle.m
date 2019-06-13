@@ -2,7 +2,7 @@ function [hit,dist] = ray_hit_triangle(position,direction,triangle)
 %use of the Möller–Trumbore intersection algorithm
 %inputs:
 % position      position of object producing ray
-% direction     direction of ray
+% direction     direction of ray (normalized or not)
 % triangle      triangle to check intersection with
 %outputs:
 % hit           hit material index(0 = miss)

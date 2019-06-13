@@ -26,9 +26,9 @@ classdef Mesh < handle
                 obj.triangles = [obj.triangles Triangle(obj.vertices(obj.indices(i,1),:),obj.vertices(obj.indices(i,2),:),obj.vertices(obj.indices(i,3),:),obj.materials(i))]; % obj.normals(i,:),
             end
         end
-        function new_axis(scale,offset)
-            axis([offset(1) offset(1) offset(2) offset(2) offset(3) offset(3)]+[-1 1 -1 1 -1 1]*scale)
-        end
+%         function new_axis(scale,offset)
+%             axis([offset(1) offset(1) offset(2) offset(2) offset(3) offset(3)]+[-1 1 -1 1 -1 1]*scale)
+%         end
    end
    methods(Access = public)
         function show(this,axis_area,draw_mesh)

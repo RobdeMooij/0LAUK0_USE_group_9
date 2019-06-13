@@ -6,7 +6,6 @@ classdef Laser < handle
         elevation
         target
         direction           %normalized vector of aiming direction      [m]
-        distance            %distance to debris                         [m]
         range               %range of the laser                         [m]
         vision = false      %boolean: facing debris                     [-]
     end
@@ -41,10 +40,6 @@ classdef Laser < handle
             this.target = this.target/distance_to_debris;
             [target_azimuth,target_elevation] = this.get_angles(this.target);
             azimuth_difference = target_azimuth-this.azimuth;
-            if abs(azimuth_difference) > pi
-                azimuth_difference = azimuth_difference-pi*2*sign(azimuth_difference);
-                this_should_never_be_shown
-            end
             if abs(azimuth_difference) <= this.omega*dt
                 this.azimuth = target_azimuth;
             else
@@ -57,23 +52,12 @@ classdef Laser < handle
                 this.elevation = this.elevation+this.omega*dt*sign(elevation_difference);
             end
             this.direction = this.get_direction(this.azimuth,this.elevation);
-%             disp(this.azimuth)
-%             disp(this.elevation)
-%             disp(this.direction)
-%             disp(this.target)
-            if distance_to_debris <= this.range && all(this.direction == this.target)
+            if distance_to_debris <= this.range && this.azimuth == target_azimuth && this.elevation == target_elevation
                 this.vision = true;
-            else                
+            else
                 this.vision = false;
             end
         end
-%         function ablate(this,target,duration)
-%             beam_energy = min(target.energy,this.power);
-%             if beam_energy > 0
-%                 %target.energy = target.energy - beam_energy;
-%                 this.capacity = this.capacity - beam_energy;
-%             end
-%         end
     end
     methods(Access = protected,Static)
         function [azimuth,elevation] = get_angles(normalized_vector)
@@ -85,28 +69,3 @@ classdef Laser < handle
         end
     end
 end
-
-% % Aim at debris object.
-%             this.target = [pos_debris(1)-this.position(1) pos_debris(2)-this.position(2) pos_debris(3)-this.position(3)];
-%             this.target = this.target/(sqrt(this.target(1)^2+this.target(2)^2+this.target(3)^2));
-% %             this.vision = 0;
-% %             theta
-% %             this.omega
-%             if abs(theta-this.omega) > this.omega
-%                 this.direction = this.direction + this.change*(this.omega/theta);
-%             else 
-%                 this.direction = this.target;
-%             end
-%             %disp(this.direction)
-%             this.distance = sqrt((pos_debris(1)-this.position(1))^2+(pos_debris(2)-this.position(2))^2+(pos_debris(3)-this.position(3))^2);
-%             line([this.position(1) this.position(1)+this.velocity*this.direction(1)],[this.position(2) this.position(2)+this.velocity*this.direction(2)],[this.position(3) this.position(3)+this.velocity*this.direction(3)],'Color','b','LineWidth',1)
-%             if this.distance < this.range
-%                 this.vision = 1;
-%                 for triangle = obsts
-%                     [hit,dist] = ray_hit_triangle(this,triangle);
-%                     if hit ~= 0
-%                         this.vision = 0;
-%                         break
-%                     end
-%                 end
-%             end
