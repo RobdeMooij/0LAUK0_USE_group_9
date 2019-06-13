@@ -4,19 +4,21 @@ classdef Laser < handle
         omega               %angular velocity                           [rad/s]
         azimuth
         elevation
+        fov
         target
         direction           %normalized vector of aiming direction      [m]
         range               %range of the laser                         [m]
         vision = false      %boolean: facing debris                     [-]
     end
     methods(Access = public,Static)
-        function obj = Laser(position,azimuth,elevation)
+        function obj = Laser(position,azimuth,elevation,fov)
             obj.position  = position;
             obj.direction = obj.get_direction(azimuth,elevation);
             obj.azimuth   = azimuth;
             obj.elevation = elevation;
             obj.omega     = 0.1;
             obj.range     = 100e3;
+            obj.fov       = fov;
         end
     end
     methods(Access = public)
@@ -51,6 +53,7 @@ classdef Laser < handle
             else
                 this.elevation = this.elevation+this.omega*dt*sign(elevation_difference);
             end
+            this.clamp_angles()
             this.direction = this.get_direction(this.azimuth,this.elevation);
             if distance_to_debris <= this.range && this.azimuth == target_azimuth && this.elevation == target_elevation
                 this.vision = true;
@@ -66,6 +69,12 @@ classdef Laser < handle
         end
         function [normalized_vector] = get_direction(azimuth,elevation)
             normalized_vector = [cos(azimuth)*cos(elevation) sin(azimuth)*cos(elevation) sin(elevation)];
+        end
+    end
+    methods(Access = protected)            
+        function clamp_angles(this)
+            this.azimuth = min(this.fov(2),max(this.azimuth,this.fov(1)));
+            this.elevation = min(this.fov(4),max(this.elevation,this.fov(3)));
         end
     end
 end
