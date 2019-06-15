@@ -10,55 +10,50 @@ laser_specs = {
     [];
     
     %case 2:    1 front
-    [16.9017    4.1645     -4.920       0      pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor]
+    [56.9017    4.1645     -4.920       0      pi/16    -pi*factor  pi*factor   -pi*factor  pi*factor]
     
     %case 3:    2 front
-    [15.5666    -9.05011   -5.256      -pi/4   pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor;
-     18.2369    17.3792    -4.583       pi/4   pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor]
+    [55.5666    -9.05011   -5.256      -pi/4   pi/16    -pi*factor  pi*factor   -pi*factor  pi*factor;
+     58.2369    17.3792    -4.583       pi/4   pi/16    -pi*factor  pi*factor   -pi*factor  pi*factor]
     
     %case 4:    3 front
-    [15.5666    -9.05011   -5.256      -pi/2   pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor;     
-     16.9017    4.1645     -4.920       0      pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor;
-     18.2369    17.3792    -4.583       pi/2   pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor]
+    [55.5666    -9.05011   -5.256      -pi/4   pi/16   -pi*factor  pi*factor   -pi*factor  pi*factor;     
+     56.9017    4.1645     -4.920       0      pi/16   -pi*factor  pi*factor   -pi*factor  pi*factor;
+     58.2369    17.3792    -4.583       pi/4   pi/16   -pi*factor  pi*factor   -pi*factor  pi*factor]
     
     %
     };
 
-azimuth_steps   = 90;
-elevation_steps = 25;
-diameter_steps  = 10;
-offset_steps    = 5;
+show_update      = false;
+show_update      = true;
+save_video       = true;
+update_steps     = 10;
+dt               = 0.01;
+detailed_factor  = 0.05;
 
-show_update         = false;
-% show_update         = true;
-% save_video          = true;
-update_steps        = 40;
-dt                  = 0.01;
-detailed_factor     = 0.2;
+distance         = 100e3;
+threshold_dist   = 500;
+system.power     = 150e3;
+system.max_power = 100e3;
 
-distance            = 100e3;
-threshold_dist      = 500;
-system.power        = 1250e3;
-system.max_power    = 100e3;
+%define range
+azimuth_steps    = 100;
+elevation_steps  = 1;
+diameter_steps   = 1;
+offset_steps     = 1;
 
-azimuth_min         = -pi*1.0;
-azimuth_max         = pi*1.0;
-elevation_min       = 0;
-elevation_max       = pi/4;
-diameter_min        = 0.01;
-diameter_max        = 0.10;
-offset_x_min        = -50;
-offset_x_max        = 50;
-offset_z_min        = -50;
-offset_z_max        = 50;
+azimuth_min      = -pi*1.0;
+azimuth_max      = pi*1.0;
+elevation_min    = 0;
+elevation_max    = pi/4;
+diameter_min     = 0.01;
+diameter_max     = 0.10;
+offset_y_min     = -50;
+offset_y_max     = 50;
+offset_z_min     = -50;
+offset_z_max     = 50;
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-system.mesh    = Mesh(mesh_dir);
-colors         = {[0 0 0],[0 1 0],[1 1 0],[1 0.5 0]};
-nr_debris      = azimuth_steps*elevation_steps*diameter_steps*offset_steps^2;
-nr_cases       = size(laser_specs,1);
-print_string   = strings(4,nr_cases);
-data           = zeros(nr_debris,7,nr_cases);
 if diameter_steps > 1
     diameter_step = (diameter_max-diameter_min)/(diameter_steps-1);
     diameter_list = diameter_min:diameter_step:diameter_max;
@@ -78,14 +73,24 @@ else
     elevation_list = (elevation_min+elevation_max)/2;
 end
 if offset_steps > 1
-    offset_x_step = (offset_x_max-offset_x_min)/(offset_steps-1);
+    offset_y_step = (offset_y_max-offset_y_min)/(offset_steps-1);
     offset_z_step = (offset_z_max-offset_z_min)/(offset_steps-1);
-    offset_x_list  = offset_x_min:offset_x_step:offset_x_max;
+    offset_y_list  = offset_y_min:offset_y_step:offset_y_max;
     offset_z_list  = offset_z_min:offset_z_step:offset_z_max;
 else
-    offset_x_list  = (offset_x_min+offset_x_max)/2;
-    offset_z_list  = (offset_x_min+offset_x_max)/2;
+    offset_y_list  = (offset_y_min+offset_y_max)/2;
+    offset_z_list  = (offset_y_min+offset_y_max)/2;
 end
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+%force lists
+diameter_list  = [0.01 0.05 0.1];
+azimuth_list   = [0];  
+elevation_list = [0];
+offset_y_list  = [0];
+offset_z_list  = [-5];
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
 if show_update
     if save_video
         figure_outer_pos = [0 0 0.5625 1];
@@ -97,22 +102,32 @@ if show_update
 else
     save_video = false;
 end
-for offset_x = offset_x_list
+
+system.mesh    = Mesh(mesh_dir);
+colors         = {[0 0 0],[0 1 0],[1 1 0],[1 0.5 0]};
+nr_cases       = size(laser_specs,1);
+nr_debris      = nr_cases*size(diameter_list,2)*size(azimuth_list,2)*size(elevation_list,2)*size(offset_y_list,2)*size(offset_z_list,2);
+print_string   = strings(4,nr_cases);
+data           = zeros(nr_debris,7,nr_cases);
+
+clc
+percentage = 0;
+fprintf('%0.2f%% eta: ... seconds\n',0)
+eta_timer = tic;
+for offset_y = offset_y_list
     for offset_z = offset_z_list
         for current_case = 1:nr_cases
             case_start = tic;
             system.lasers = init_lasers(laser_specs{current_case},system.mesh.position);
-            class_hit = [0 0 0 0];
-            percentage = 0;
-        %     diameter_list  = [0.1 0.05 0.01];
-        %     azimuth_list   = [-pi/4 -pi/8 0 pi/8 pi/4];  
-        %     elevation_list = [0 pi/8 pi/4];
+            class_hit = [0 0 0 0];            
             for diameter = diameter_list
                 for azimuth = azimuth_list
                     for elevation = elevation_list
-        %                 diameter = 0.01+rand()*0.09;
-        %                 azimuth = rand()*2*pi-pi;
-        %                 elevation = rand()*pi/4;
+%                         diameter  = 0.01+rand()*0.09;
+%                         azimuth   = rand()*2*pi-pi;
+%                         elevation = rand()*pi/4;
+%                         offset_x  = (rand()-0.5)*100;
+%                         offset_y  = (rand()-0.5)*100;
                         if save_video
                             write_dir = char(strcat(video_dir,sprintf('case=%1d_d=%0.2f_a=%0.3f_e=%0.3f_%05d.avi',current_case,diameter,azimuth,elevation,round(0))));%rand()*99999))));
                             new_video = VideoWriter(write_dir);
@@ -120,12 +135,12 @@ for offset_x = offset_x_list
                             open(new_video);
                         end
                         reset_lasers(system,laser_specs{current_case})
-                        debris_offset = [offset_x 0 offset_z];
+                        debris_offset = [0 offset_y offset_z];
                         system.debris = Debris(azimuth,elevation,distance,diameter,debris_offset,dt);
                         if show_update
                             axis_area = get_axis_area(system);
                             axis(axis_area)
-                            view(30,24) %azimuth/pi*180+
+                            view(30,24) % azimuth/pi*180+
                             scale = axis_area(2)-axis_area(1);
                         end
                         next = 0;
@@ -156,15 +171,6 @@ for offset_x = offset_x_list
                         end
                         class_hit(impact) = class_hit(impact)+1;
                         percentage = percentage+100/nr_debris;
-                        clc
-                        fprintf('case %0d: %0.4f%%',current_case,percentage)                
-                        if impact ~= 1
-                            impact_velocity = system.debris.direction*system.debris.velocity;
-                            impact_velocity = sqrt((impact_velocity(1)-7.7e3)^2+impact_velocity(2)^2+impact_velocity(3)^2);
-                        else
-                            impact_velocity = 0;
-                        end
-                        data(round(percentage/100*nr_debris),:,current_case) = [diameter azimuth elevation impact impact_velocity debris_offset(1) debris_offset(3)];
                         if save_video
                             if next ~= 2
                                 for extra_frames = 1:72
@@ -176,6 +182,17 @@ for offset_x = offset_x_list
                             end
                             close(new_video)
                         end                
+                        %rough eta, assumes every simulation takes the same time
+                        eta = (100-percentage)/percentage*toc(eta_timer);
+                        clc
+                        fprintf('%0.2f%% eta: %0.1f seconds\n',percentage,eta)                
+                        if impact ~= 1
+                            impact_velocity = system.debris.direction*system.debris.velocity;
+                            impact_velocity = sqrt((impact_velocity(1)-7.7e3)^2+impact_velocity(2)^2+impact_velocity(3)^2);
+                        else
+                            impact_velocity = 0;
+                        end
+                        data(round(percentage/100*nr_debris),:,current_case) = [diameter azimuth elevation impact impact_velocity debris_offset(1) debris_offset(3)];
                     end
                 end
             end
@@ -191,24 +208,26 @@ fprintf('total number of debris: %0.0f\n\n',nr_debris)
 for str = print_string
     disp(char(str))
 end
-fprintf('total time elapsed: %0.0fs\n',toc(all_time))
+fprintf('total time elapsed: %0.0f seconds\n',toc(all_time))
 
 function [color_index_impact,extra_info] = get_end_impact(system,dt)    
     dist_to_iss = sqrt((system.debris.position(1)-system.mesh.position(1))^2+(system.debris.position(2)-system.mesh.position(2))^2+(system.debris.position(3)-system.mesh.position(3))^2);
-    net_direction = system.debris.direction*system.debris.velocity-[7.7e3 0 0];
-    net_direction = net_direction/sqrt(net_direction(1)^2+net_direction(2)^2+net_direction(3)^2);
-    if dist_to_iss <= system.debris.velocity*dt+60
+    vec_velocity = system.debris.direction*system.debris.velocity-[7.7e3 0 0];
+    net_velocity = sqrt(vec_velocity(1)^2+vec_velocity(2)^2+vec_velocity(3)^2);
+    net_direction = vec_velocity/net_velocity;
+    
+    if dist_to_iss <= net_velocity*dt+60
         [triangle_hit_type,min_dist] = hit_mesh(system.debris.position,net_direction,system.mesh.triangles);
-        if min_dist <= system.debris.velocity*dt
+        if min_dist <= net_velocity*dt
             color_index_impact = triangle_hit_type+1;
             extra_info = system.debris.position+net_direction*min_dist;
         else
             color_index_impact = 1;
-            extra_info = [system.debris.position+net_direction*system.debris.velocity*dt 0];
+            extra_info = [system.debris.position+net_direction*net_velocity*dt 0];
         end
     else
         color_index_impact = 1;
-        extra_info = [system.debris.position+net_direction*system.debris.velocity*dt 0];
+        extra_info = [system.debris.position+net_direction*net_velocity*dt 0];
     end
 end
 

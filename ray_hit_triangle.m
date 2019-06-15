@@ -8,7 +8,7 @@ function [hit,dist] = ray_hit_triangle(position,direction,triangle)
 % hit           hit material index(0 = miss)
 % dist          distance from position to the intersection
 
-smallest_value = 1e-7;
+smallest_value = 1e-10;
 cross_ve = quick_cross(direction,triangle.edge_2);
 dot_ec = quick_dot(triangle.edge_1,cross_ve);
 
