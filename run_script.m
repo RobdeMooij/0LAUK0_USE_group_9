@@ -176,9 +176,9 @@ for current_case = 1:nr_cases
                             if save_video
                                frame = getframe(gcf);
                                writeVideo(new_video,frame);  
-                            end                            
-                            least_distance = sqrt((system.debris.position(1)-system.mesh.position(1))^2+(system.debris.position(2)-system.mesh.position(2))^2+(system.debris.position(3)-system.mesh.position(3))^2);
+                            end
                         end
+                        debris_distance = sqrt((system.debris.position(1)-system.mesh.position(1))^2+(system.debris.position(2)-system.mesh.position(2))^2+(system.debris.position(3)-system.mesh.position(3))^2);
                         class_hit(impact) = class_hit(impact)+1;
                         percentage = percentage+100/nr_debris;
                         if save_video
@@ -191,15 +191,14 @@ for current_case = 1:nr_cases
                                 end
                             end
                             close(new_video)
-                        end
-                                                                
+                        end                        
                         if impact ~= 1
                             impact_velocity = system.debris.direction*system.debris.velocity;
                             impact_velocity = sqrt((impact_velocity(1)-7.7e3)^2+impact_velocity(2)^2+impact_velocity(3)^2);
                         else
                             impact_velocity = 0;
                         end
-                        data(round(percentage/100*nr_debris),:) = [current_case diameter azimuth elevation impact impact_velocity least_distance debris_offset(1) debris_offset(3)];
+                        data(round(percentage/100*nr_debris),:) = [current_case diameter azimuth elevation impact impact_velocity debris_distance debris_offset(2) debris_offset(3)];
                         eta = (100-percentage)/percentage*toc(eta_timer); %rough eta, assumes every simulation takes the same time
                         eta_string = datestr(seconds(eta),'HH:MM:SS');
                         clc
