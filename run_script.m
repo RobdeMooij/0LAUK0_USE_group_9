@@ -42,10 +42,10 @@ system.max_power = 100e3;
 
 %define range
 azimuth_steps    = 20;
-elevation_steps  = 10;
+elevation_steps  = 5;
 diameter_steps   = 5;
 offset_y_steps   = 5;
-offset_z_steps   = 5;
+offset_z_steps   = 3;
 
 azimuth_min      = -pi*0.9;
 azimuth_max      = pi*0.9;
@@ -53,8 +53,8 @@ elevation_min    = 0;
 elevation_max    = pi/4;
 diameter_min     = 0.01;
 diameter_max     = 0.10;
-offset_y_min     = -20;
-offset_y_max     = 20;
+offset_y_min     = -30;
+offset_y_max     = 30;
 offset_z_min     = -20;
 offset_z_max     = 20;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
