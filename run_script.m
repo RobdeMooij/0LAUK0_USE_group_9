@@ -37,12 +37,13 @@ system.max_power = 100e3;
 
 %define range
 azimuth_steps    = 60;
-elevation_steps  = 8;
+elevation_steps  = 12;
 diameter_steps   = 5;
-offset_steps     = 3;
+offset_y_steps   = 5;
+offset_z_steps   = 1;
 
-azimuth_min      = -pi*1.0;
-azimuth_max      = pi*1.0;
+azimuth_min      = -pi*0.9;
+azimuth_max      = pi*0.9;
 elevation_min    = 0;
 elevation_max    = pi/4;
 diameter_min     = 0.01;
@@ -71,13 +72,16 @@ if elevation_steps > 1
 else
     elevation_list = (elevation_min+elevation_max)/2;
 end
-if offset_steps > 1
-    offset_y_step = (offset_y_max-offset_y_min)/(offset_steps-1);
-    offset_z_step = (offset_z_max-offset_z_min)/(offset_steps-1);
+if offset_y_steps > 1
+    offset_y_step = (offset_y_max-offset_y_min)/(offset_y_steps-1);    
     offset_y_list  = offset_y_min:offset_y_step:offset_y_max;
-    offset_z_list  = offset_z_min:offset_z_step:offset_z_max;
-else
+else 
     offset_y_list  = (offset_y_min+offset_y_max)/2;
+end
+if offset_z_steps > 1
+    offset_z_step = (offset_z_max-offset_z_min)/(offset_z_steps-1);
+    offset_z_list  = offset_z_min:offset_z_step:offset_z_max;
+else    
     offset_z_list  = (offset_y_min+offset_y_max)/2;
 end
 
@@ -107,7 +111,7 @@ colors         = {[0 0 0],[0 1 0],[1 1 0],[1 0.5 0]};
 nr_cases       = size(laser_specs,1);
 nr_debris      = nr_cases*size(diameter_list,2)*size(azimuth_list,2)*size(elevation_list,2)*size(offset_y_list,2)*size(offset_z_list,2);
 print_string   = strings(4,nr_cases);
-data           = zeros(nr_debris,8,nr_cases);
+data           = zeros(nr_debris/nr_cases,8,nr_cases);
 
 clc
 percentage = 0;
@@ -185,10 +189,7 @@ for current_case = 1:nr_cases
                             close(new_video)
                         end
                         %rough eta, assumes every simulation takes the same time
-                        eta = (100-percentage)/percentage*toc(eta_timer);
-                        eta_string = datestr(seconds(eta),'HH:MM:SS');
-                        clc
-                        fprintf('%0.2f%% eta: %s\n',percentage,eta_string)                
+                                        
                         if impact ~= 1
                             impact_velocity = system.debris.direction*system.debris.velocity;
                             impact_velocity = sqrt((impact_velocity(1)-7.7e3)^2+impact_velocity(2)^2+impact_velocity(3)^2);
@@ -196,6 +197,10 @@ for current_case = 1:nr_cases
                             impact_velocity = 0;
                         end
                         data(round(percentage/100*nr_debris),:,current_case) = [diameter azimuth elevation impact impact_velocity least_distance debris_offset(1) debris_offset(3)];
+                        eta = (100-percentage)/percentage*toc(eta_timer);
+                        eta_string = datestr(seconds(eta),'HH:MM:SS');
+                        clc
+                        fprintf('%0.2f%% eta: %s\nmiss: %0d\tlow risk: %0d\t medium risk: %0d\t high risk: %0d\n',percentage,eta_string,class_hit(1),class_hit(2),class_hit(3),class_hit(4))
                     end
                 end
             end

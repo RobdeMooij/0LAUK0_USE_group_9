@@ -6,10 +6,6 @@ classdef Debris < handle
         acceleration        %acceleration vector            [m/s^2]
         mass                %mass of he debris              [kg]
         diameter            %diameter of the debris         [m]
-%         impact = 0          %what it is going to hit        [-]
-%         steps = 0           %steps needed to hit ISS        [-]
-%         hit_pos = [0 0 0]   %position of impact on ISS      [m]
-%         next_pos = [0 0 0]  %position of next step          [m]
     end
     methods(Access = public,Static)
         function obj = Debris(azimuth,elevation,distance,diameter,offset,dt)
@@ -49,7 +45,7 @@ classdef Debris < handle
         end
         function step(this,Fr,dt)
             this.movement_force(Fr,dt)
-            this.movement_iss(dt)
+            this.movement_iss(dt)            
         end
         function movement_force(this,Fr,dt)
             Fg = -3.9857e+14*this.position/((this.position(1)^2+this.position(2)^2+this.position(3)^2)^1.5);
