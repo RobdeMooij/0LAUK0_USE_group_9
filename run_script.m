@@ -5,68 +5,71 @@ all_time = tic;
 mesh_dir  = "C:\Users\s167917\Documents\#School\Jaar 3\4 Project USE Robots Everywhere\model\iss_2.json";
 video_dir = "C:\Users\s167917\Documents\#School\Jaar 3\4 Project USE Robots Everywhere\model\videos\";
 
-factor = 0.4;
+factor = 0.5;
 laser_specs = {
     %case 1:    no lasers
     [];
     
     %case 2:    1 front straight
-    [56.9017    4.1645     -4.920       0      0        -pi*factor  pi*factor   -pi*factor  pi*factor]
+    [56.9017    4.1645     -4.920       0       0        -pi*factor  pi*factor   -pi*factor  pi*factor]
     
     %case 3:    1 front tilted
-    [56.9017    4.1645     -4.920       0      pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor]
+    [56.9017    4.1645     -4.920       0       pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor]
     
-    %case 4:    2 front
-    [55.5666    -9.05011   -5.256      -pi/8   pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor;
-     58.2369    17.3792    -4.583       pi/8   pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor]
+    %case 4:    2 front tilted
+    [55.5666    -9.05011   -5.256       0       pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor;
+     58.2369    17.3792    -4.583       0       pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor]
     
-    %case 5:    3 front
-    [55.5666    -9.05011   -5.256      -pi/6   pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor;     
-     56.9017    4.1645     -4.920       0      0        -pi*factor  pi*factor   -pi*factor  pi*factor;
-     58.2369    17.3792    -4.583       pi/6   pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor]
+    %case 5:    3 front tilted
+    [55.5666    -9.05011   -5.256       0       pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor;     
+     56.9017    4.1645     -4.920       0       pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor;
+     58.2369    17.3792    -4.583       0       pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor]
     
-    %case 6:    3 front
-    [55.5666    -9.05011   -5.256      -pi/6   pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor;     
-     56.9017    4.1645     -4.920       0      pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor;
-     58.2369    17.3792    -4.583       pi/6   pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor]
-    
-    %
+    %case 6:    3 front tiled, outer lasers angled sideways    
+    [55.5666    -9.05011   -5.256      -pi/6    pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor;     
+     56.9017    4.1645     -4.920       0       pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor;
+     58.2369    17.3792    -4.583       pi/6    pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor]
+     
+    %case 7:    1 front straight, 2 front tiled, outer lasers angled sideways    
+    [55.5666    -9.05011   -5.256      -pi/6    pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor;     
+     56.9017    4.1645     -4.920       0       0        -pi*factor  pi*factor   -pi*factor  pi*factor;
+     58.2369    17.3792    -4.583       pi/6    pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor]
     };
 
 show_update      = false;
 % show_update      = true;
 % save_video       = true;
 save_video       = false;
-update_steps     = 10;
+update_steps     = 40;
 dt               = 0.01;
-detailed_factor  = 0.05;
+detailed_factor  = 0.1;
 
 distance         = 100e3;
-threshold_dist   = 500;
-system.power     = 150e3;
+threshold_dist   = 250;
+system.power     = 158.4e3; %74.4
 system.max_power = 100e3;
 
 %define range
 azimuth_steps    = 20;
-elevation_steps  = 5;
+elevation_steps  = 6;
 diameter_steps   = 10;
-offset_x_steps   = 2;
+offset_x_steps   = 3;
 offset_y_steps   = 5;
-offset_z_steps   = 3;
+offset_z_steps   = 5;
 
-azimuth_min      = -pi*0.9;
-azimuth_max      = pi*0.9;
+azimuth_min      = -pi*175/180;
+azimuth_max      = -azimuth_min;
 elevation_min    = 0;
 elevation_max    = pi/4;
 diameter_min     = 0.01;
 diameter_max     = 0.10;
 
-offset_x_min     = -20;
-offset_x_max     = 0;
+offset_x_min     = 2;
+offset_x_max     = 26;
 offset_y_min     = -45;
 offset_y_max     = 45;
-offset_z_min     = -20;
-offset_z_max     = 20;
+offset_z_min     = -30;
+offset_z_max     = 30;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 if diameter_steps > 1
     diameter_step = (diameter_max-diameter_min)/(diameter_steps-1);
@@ -112,44 +115,89 @@ for x = offset_x_list
         end
     end
 end
-
+asd
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-%force lists
+% force lists
 % diameter_list  = [0.1];
 % azimuth_list   = [0];  
 % elevation_list = [0];
 % offset_list    = [0 0 0];
-% offset_list  = [
-%   -20.0000  -45.0000  -20.0000;
-%   -20.0000  -45.0000         0;
-%   -20.0000  -45.0000   20.0000;
-%   -20.0000  -22.5000  -20.0000;
-%   -20.0000  -22.5000         0;
-%   -20.0000  -22.5000   20.0000;
-%   -20.0000         0  -20.0000;
-%   -20.0000         0         0;
-%   -20.0000         0   20.0000;
-%   -20.0000   22.5000  -20.0000;
-%   -20.0000   22.5000         0;
-%   -20.0000   22.5000   20.0000;
-%   -20.0000   45.0000  -20.0000;
-%   -20.0000   45.0000         0;
-%   -20.0000   45.0000   20.0000;
-%          0  -45.0000  -20.0000;
-%          0  -45.0000         0;
-%          0  -45.0000   20.0000;
-%          0  -22.5000  -20.0000;
-%          0  -22.5000         0;
-%          0  -22.5000   20.0000;
-%          0         0  -20.0000;
-%          0         0         0;
-%          0         0   20.0000;
-%          0   22.5000  -20.0000;
-%          0   22.5000         0;
-%          0   22.5000   20.0000;
-%          0   45.0000  -20.0000;
-%          0   45.0000         0;
-%          0   45.0000   20.0000];
+offset_list  = [
+2.0000  -45.0000  -30.0000;
+2.0000  -45.0000  -15.0000;
+2.0000  -45.0000         0;
+2.0000  -45.0000   15.0000;
+2.0000  -45.0000   30.0000;
+2.0000  -22.5000  -30.0000;
+2.0000  -22.5000  -15.0000;
+2.0000  -22.5000         0;
+2.0000  -22.5000   15.0000;
+2.0000  -22.5000   30.0000;
+% 2.0000         0  -30.0000;
+2.0000         0  -15.0000;
+2.0000         0         0;
+% 2.0000         0   15.0000;
+% 2.0000         0   30.0000;
+2.0000   22.5000  -30.0000;
+2.0000   22.5000  -15.0000;
+2.0000   22.5000         0;
+2.0000   22.5000   15.0000;
+2.0000   22.5000   30.0000;
+2.0000   45.0000  -30.0000;
+2.0000   45.0000  -15.0000;
+2.0000   45.0000         0;
+2.0000   45.0000   15.0000;
+2.0000   45.0000   30.0000;
+14.0000  -45.0000  -30.0000;
+14.0000  -45.0000  -15.0000;
+14.0000  -45.0000         0;
+14.0000  -45.0000   15.0000;
+14.0000  -45.0000   30.0000;
+14.0000  -22.5000  -30.0000;
+14.0000  -22.5000  -15.0000;
+14.0000  -22.5000         0;
+14.0000  -22.5000   15.0000;
+14.0000  -22.5000   30.0000;
+% 14.0000         0  -30.0000;
+14.0000         0  -15.0000;
+14.0000         0         0;
+% 14.0000         0   15.0000;
+% 14.0000         0   30.0000;
+14.0000   22.5000  -30.0000;
+14.0000   22.5000  -15.0000;
+14.0000   22.5000         0;
+14.0000   22.5000   15.0000;
+14.0000   22.5000   30.0000;
+14.0000   45.0000  -30.0000;
+14.0000   45.0000  -15.0000;
+14.0000   45.0000         0;
+14.0000   45.0000   15.0000;
+14.0000   45.0000   30.0000;
+26.0000  -45.0000  -30.0000;
+26.0000  -45.0000  -15.0000;
+26.0000  -45.0000         0;
+26.0000  -45.0000   15.0000;
+26.0000  -45.0000   30.0000;
+26.0000  -22.5000  -30.0000;
+26.0000  -22.5000  -15.0000;
+26.0000  -22.5000         0;
+26.0000  -22.5000   15.0000;
+26.0000  -22.5000   30.0000;
+% 26.0000         0  -30.0000;
+26.0000         0  -15.0000;
+26.0000         0         0;
+% 26.0000         0   15.0000;
+% 26.0000         0   30.0000;
+26.0000   22.5000  -30.0000;
+26.0000   22.5000  -15.0000;
+26.0000   22.5000         0;
+26.0000   22.5000   15.0000;
+26.0000   22.5000   30.0000;
+26.0000   45.0000  -30.0000;
+26.0000   45.0000  -15.0000;
+26.0000   45.0000         0;
+26.0000   45.0000   15.0000;
+26.0000   45.0000   30.0000];
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 if show_update
@@ -169,7 +217,7 @@ colors         = {[0 0 0],[0 1 0],[1 1 0],[1 0.5 0]};
 nr_cases       = size(laser_specs,1);
 nr_debris      = nr_cases*size(diameter_list,2)*size(azimuth_list,2)*size(elevation_list,2)*size(offset_list,1);
 print_string   = strings(4,nr_cases);
-data           = zeros(nr_debris,9);
+data           = zeros(nr_debris,10);
 
 clc
 percentage = 0;
@@ -251,7 +299,7 @@ for current_case = 1:nr_cases
                     else
                         impact_velocity = 0;
                     end
-                    data(round(percentage/100*nr_debris),:) = [current_case diameter azimuth elevation impact impact_velocity debris_distance debris_offset(2) debris_offset(3)];
+                    data(round(percentage/100*nr_debris),:) = [current_case diameter azimuth elevation impact impact_velocity debris_distance debris_offset(1) debris_offset(2) debris_offset(3)];
                     eta = (100-percentage)/percentage*toc(eta_timer); %rough eta, assumes every simulation takes the same time
                     eta_string = datestr(seconds(eta),'HH:MM:SS');
                     clc
@@ -313,14 +361,13 @@ function next = steps(system,nr_steps,threshold_dist,dt)
         laser_force = get_laser_force(system,dt);
         system.debris.step(laser_force,dt)
         new_dist = sqrt((system.debris.position(1)-system.mesh.position(1))^2+(system.debris.position(2)-system.mesh.position(2))^2+(system.debris.position(3)-system.mesh.position(3))^2);
-        if new_dist <= threshold_dist
-            next = 1;
-            break
-        end
         if dist < new_dist 
             next = 2;
             break
-        end
+        elseif new_dist <= threshold_dist
+            next = 1;
+            break
+        end        
     end
 end
 
@@ -329,7 +376,7 @@ function next = step(system,dt)
     laser_force = get_laser_force(system,dt);
     system.debris.step(laser_force,dt)
     new_dist = sqrt((system.debris.position(1)-system.mesh.position(1))^2+(system.debris.position(2)-system.mesh.position(2))^2+(system.debris.position(3)-system.mesh.position(3))^2);
-    if dist > new_dist 
+    if dist > new_dist
         next = 1;
     else
         next = 3;
@@ -363,7 +410,7 @@ function force = get_force(power,d,L)
 %     D       = 1.5;
 %     b       = a*M2*lambda*L/D;
     Ep    = 10;
-    b     = 0.02*L;
+    b     = 1.9833e-07*L;
     Cm    = 1e-4;
     Ed    = Ep*min(1,(d/b)^2);    
     R     = power/Ep;
