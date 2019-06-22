@@ -30,10 +30,14 @@ laser_specs = {
      56.9017    4.1645     -4.920       0       pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor;
      58.2369    17.3792    -4.583       pi/6    pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor]
      
-    %case 7:    1 front straight, 2 front tiled, outer lasers angled sideways    
+    %case 7:    1 front straight, 2 front tiled, outer lasers angled sideways
     [55.5666    -9.05011   -5.256      -pi/6    pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor;     
      56.9017    4.1645     -4.920       0       0        -pi*factor  pi*factor   -pi*factor  pi*factor;
      58.2369    17.3792    -4.583       pi/6    pi/8     -pi*factor  pi*factor   -pi*factor  pi*factor]
+     
+    %case 8:    2 front straight
+    [55.5666    -9.05011   -5.256       0       0        -pi*factor  pi*factor   -pi*factor  pi*factor;
+     58.2369    17.3792    -4.583       0       0        -pi*factor  pi*factor   -pi*factor  pi*factor]
     };
 
 show_update      = false;
@@ -46,7 +50,7 @@ detailed_factor  = 0.1;
 
 distance         = 100e3;
 threshold_dist   = 250;
-system.power     = 158.4e3; %74.4
+system.power     = 74.4e3; %158.4e3
 system.max_power = 100e3;
 
 %define range
