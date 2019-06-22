@@ -119,7 +119,7 @@ for x = offset_x_list
         end
     end
 end
-asd
+
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % force lists
 % diameter_list  = [0.1];
